@@ -127,7 +127,7 @@ export default function VendorLayout({
                         <div className="px-4 md:px-8 pt-4 animate-scale-in">
                             {flash.success && (
                                 <div className="p-4 rounded-xl bg-(--color-success-light) border border-(--color-success) text-(--color-success-dark) flex items-center gap-3 shadow-token-md">
-                                    <span className="w-6 h-6 rounded-full bg-(--color-success) text-white flex items-center justify-center min-w-[24px]">
+                                    <span className="w-6 h-6 rounded-full bg-(--color-success) text-white flex items-center justify-center min-w-6">
                                         <AppIcon
                                             name="success"
                                             className="h-4 w-4"
@@ -139,7 +139,7 @@ export default function VendorLayout({
                             )}
                             {flash.error && (
                                 <div className="p-4 rounded-xl bg-(--color-danger-light) border border-(--color-danger) text-(--color-danger-dark) flex items-center gap-3 shadow-token-md">
-                                    <span className="w-6 h-6 rounded-full bg-(--color-danger) text-white flex items-center justify-center min-w-[24px]">
+                                    <span className="w-6 h-6 rounded-full bg-(--color-danger) text-white flex items-center justify-center min-w-6">
                                         <AppIcon
                                             name="error"
                                             className="h-4 w-4"

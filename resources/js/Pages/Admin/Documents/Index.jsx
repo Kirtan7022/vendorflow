@@ -213,7 +213,7 @@ export default function DocumentsIndex({ documents, currentStatus = 'pending' })
     return (
         <AdminLayout title="Document Verification" activeNav="Documents" header={header}>
             <div className="mb-6">
-                <div className="flex gap-2 flex-wrap p-1 bg-(--color-bg-tertiary) rounded-xl inline-flex">
+                <div className="inline-flex gap-2 flex-wrap p-1 bg-(--color-bg-tertiary) rounded-xl">
                     {statusFilters.map((status) => (
                         <Link
                             key={status.value}
@@ -235,6 +235,7 @@ export default function DocumentsIndex({ documents, currentStatus = 'pending' })
             <DataTable
                 columns={columns}
                 data={documents?.data || []}
+                links={documents?.links || []}
                 emptyIcon="success"
                 emptyMessage={
                     currentStatus === 'pending'

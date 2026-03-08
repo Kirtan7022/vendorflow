@@ -36,7 +36,7 @@ export function Alert({ type = 'info', title, children, onClose }) {
             <div className="flex items-start gap-3">
                 <AppIcon
                     name={styles.icon}
-                    className="h-5 w-5 mt-0.5 flex-shrink-0"
+                    className="h-5 w-5 mt-0.5 shrink-0"
                     fallback={<span className="text-lg">{styles.icon}</span>}
                 />
                 <div className="flex-1">

@@ -35,6 +35,12 @@ class ReportController extends Controller
     {
         $this->authorize('viewReports');
 
+        $request->validate([
+            'start_date' => 'nullable|date|date_format:Y-m-d',
+            'end_date' => 'nullable|date|date_format:Y-m-d|after_or_equal:start_date',
+            'status' => 'nullable|string|max:50',
+        ]);
+
         $data = $this->reportService->paymentReportData($request);
 
         return Inertia::render('Admin/Reports/PaymentReport', [
@@ -50,6 +56,15 @@ class ReportController extends Controller
     public function exportCsv(Request $request, string $type)
     {
         $this->authorize('exportReports');
+
+        $request->validate([
+            'start_date' => 'nullable|date|date_format:Y-m-d',
+            'end_date' => 'nullable|date|date_format:Y-m-d|after_or_equal:start_date',
+            'status' => 'nullable|string|max:50',
+            'compliance' => 'nullable|string|max:50',
+            'compliance_status' => 'nullable|string|max:50',
+            'min_score' => 'nullable|numeric|min:0|max:100',
+        ]);
 
         return $this->reportService->exportCsvByType($request, $type);
     }
@@ -108,6 +123,11 @@ class ReportController extends Controller
     public function documentExpiryReport(Request $request)
     {
         $this->authorize('viewReports');
+
+        $request->validate([
+            'start_date' => 'nullable|date|date_format:Y-m-d',
+            'end_date' => 'nullable|date|date_format:Y-m-d|after_or_equal:start_date',
+        ]);
 
         $data = $this->reportService->documentExpiryReportData($request);
 

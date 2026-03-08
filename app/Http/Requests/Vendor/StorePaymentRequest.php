@@ -23,9 +23,10 @@ class StorePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:1|max:99999999.99',
             'description' => 'required|string|max:500',
             'invoice_number' => 'nullable|string|max:50',
+            'due_date' => 'nullable|date|date_format:Y-m-d|after_or_equal:today',
         ];
     }
 }

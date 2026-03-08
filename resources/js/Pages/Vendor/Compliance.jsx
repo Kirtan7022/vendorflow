@@ -25,7 +25,7 @@ export default function Compliance({ vendor, complianceResults = [], rules = [] 
             <div className="space-y-8">
                 <div className="bg-(--color-bg-primary) border border-(--color-border-primary) rounded-2xl p-8 shadow-token-sm">
                     <div className="flex flex-col md:flex-row items-center gap-8">
-                        <div className="relative w-40 h-40 flex-shrink-0">
+                        <div className="relative w-40 h-40 shrink-0">
                             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                                 <circle
                                     cx="50"

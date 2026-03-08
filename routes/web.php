@@ -71,7 +71,9 @@ Route::middleware('auth')->group(function () {
 
         // Profile routes
         Route::get('/profile', [VendorController::class, 'profile'])->name('profile');
-        Route::put('/profile', [VendorController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/profile', [VendorController::class, 'updateProfile'])
+            ->middleware('throttle:sensitive-action')
+            ->name('profile.update');
 
         // Documents routes
         Route::get('/documents', [VendorController::class, 'documents'])->name('documents');
@@ -115,7 +117,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/performance', [ReportController::class, 'performanceReport'])->name('reports.performance');
         Route::get('/reports/compliance', [ReportController::class, 'complianceReport'])->name('reports.compliance');
         Route::get('/reports/document-expiry', [ReportController::class, 'documentExpiryReport'])->name('reports.document-expiry');
-        Route::get('/reports/export/{type}', [ReportController::class, 'exportCsv'])->name('reports.export');
+        Route::get('/reports/export/{type}', [ReportController::class, 'exportCsv'])
+            ->where('type', '[a-z_]+')
+            ->name('reports.export');
         Route::get('/system-health', [SystemHealthController::class, 'index'])->name('system-health.index');
     });
 
@@ -124,12 +128,24 @@ Route::middleware('auth')->group(function () {
     // ==========================================
     Route::middleware(['role:ops_manager,super_admin'])->prefix('admin')->name('admin.')->group(function () {
         // Vendor lifecycle actions
-        Route::post('/vendors/{vendor}/approve', [VendorManagementController::class, 'approve'])->name('vendors.approve');
-        Route::post('/vendors/{vendor}/reject', [VendorManagementController::class, 'reject'])->name('vendors.reject');
-        Route::post('/vendors/{vendor}/activate', [VendorManagementController::class, 'activate'])->name('vendors.activate');
-        Route::post('/vendors/{vendor}/suspend', [VendorManagementController::class, 'suspend'])->name('vendors.suspend');
-        Route::post('/vendors/{vendor}/terminate', [VendorManagementController::class, 'terminate'])->name('vendors.terminate');
-        Route::post('/vendors/{vendor}/notes', [VendorManagementController::class, 'notes'])->name('vendors.notes');
+        Route::post('/vendors/{vendor}/approve', [VendorManagementController::class, 'approve'])
+            ->middleware('throttle:sensitive-action')
+            ->name('vendors.approve');
+        Route::post('/vendors/{vendor}/reject', [VendorManagementController::class, 'reject'])
+            ->middleware('throttle:sensitive-action')
+            ->name('vendors.reject');
+        Route::post('/vendors/{vendor}/activate', [VendorManagementController::class, 'activate'])
+            ->middleware('throttle:sensitive-action')
+            ->name('vendors.activate');
+        Route::post('/vendors/{vendor}/suspend', [VendorManagementController::class, 'suspend'])
+            ->middleware('throttle:sensitive-action')
+            ->name('vendors.suspend');
+        Route::post('/vendors/{vendor}/terminate', [VendorManagementController::class, 'terminate'])
+            ->middleware('throttle:sensitive-action')
+            ->name('vendors.terminate');
+        Route::post('/vendors/{vendor}/notes', [VendorManagementController::class, 'notes'])
+            ->middleware('throttle:sensitive-action')
+            ->name('vendors.notes');
 
         // Contact messages
         Route::resource('contact-messages', \App\Http\Controllers\ContactController::class)->only(['index', 'show', 'update', 'destroy'])->names('contact-messages');
@@ -137,24 +153,36 @@ Route::middleware('auth')->group(function () {
         // Document management
         Route::get('/documents', [DocumentController::class, 'adminIndex'])->name('documents.index');
         Route::get('/documents/{document}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
-        Route::post('/documents/{document}/verify', [DocumentController::class, 'verify'])->name('documents.verify');
-        Route::post('/documents/{document}/reject', [DocumentController::class, 'reject'])->name('documents.reject');
+        Route::post('/documents/{document}/verify', [DocumentController::class, 'verify'])
+            ->middleware('throttle:sensitive-action')
+            ->name('documents.verify');
+        Route::post('/documents/{document}/reject', [DocumentController::class, 'reject'])
+            ->middleware('throttle:sensitive-action')
+            ->name('documents.reject');
 
         // Compliance operations
         Route::get('/compliance', [ComplianceController::class, 'dashboard'])->name('compliance.dashboard');
         Route::get('/compliance/rules', [ComplianceController::class, 'rules'])->name('compliance.rules');
         Route::get('/compliance/vendor/{vendor}', [ComplianceController::class, 'vendorCompliance'])->name('compliance.vendor');
-        Route::post('/compliance/evaluate/{vendor}', [ComplianceController::class, 'evaluate'])->name('compliance.evaluate');
-        Route::post('/compliance/evaluate-all', [ComplianceController::class, 'evaluateAll'])->name('compliance.evaluate-all');
+        Route::post('/compliance/evaluate/{vendor}', [ComplianceController::class, 'evaluate'])
+            ->middleware('throttle:sensitive-action')
+            ->name('compliance.evaluate');
+        Route::post('/compliance/evaluate-all', [ComplianceController::class, 'evaluateAll'])
+            ->middleware('throttle:sensitive-action')
+            ->name('compliance.evaluate-all');
 
         // Performance operations
         Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
         Route::get('/performance/{vendor}', [PerformanceController::class, 'show'])->name('performance.show');
         Route::get('/performance/{vendor}/rate', [PerformanceController::class, 'rateForm'])->name('performance.rate-form');
-        Route::post('/performance/{vendor}/rate', [PerformanceController::class, 'rate'])->name('performance.rate');
+        Route::post('/performance/{vendor}/rate', [PerformanceController::class, 'rate'])
+            ->middleware('throttle:sensitive-action')
+            ->name('performance.rate');
 
         // Ops payment validation only
-        Route::post('/payments/{payment}/validate-ops', [PaymentController::class, 'validateOps'])->name('payments.validate-ops');
+        Route::post('/payments/{payment}/validate-ops', [PaymentController::class, 'validateOps'])
+            ->middleware('throttle:sensitive-action')
+            ->name('payments.validate-ops');
     });
 
     // ==========================================
@@ -174,7 +202,9 @@ Route::middleware('auth')->group(function () {
     // ==========================================
     Route::middleware(['role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
-        Route::patch('/compliance/rules/{rule}', [ComplianceController::class, 'updateRule'])->name('compliance.rules.update');
+        Route::patch('/compliance/rules/{rule}', [ComplianceController::class, 'updateRule'])
+            ->middleware('throttle:sensitive-action')
+            ->name('compliance.rules.update');
         Route::get('/staff-users', [StaffUserController::class, 'index'])->name('staff-users.index');
         Route::post('/staff-users', [StaffUserController::class, 'store'])
             ->middleware('throttle:sensitive-action')

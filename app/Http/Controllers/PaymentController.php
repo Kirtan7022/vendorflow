@@ -7,6 +7,7 @@ use App\Services\PaymentQueryService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PaymentController extends Controller
@@ -67,6 +68,8 @@ class PaymentController extends Controller
 
             return back()->with('success', $approve ? 'Payment validated successfully.' : 'Payment rejected.');
         } catch (\Exception $e) {
+            Log::error('Payment ops validation failed', ['payment_id' => $payment->id, 'error' => $e->getMessage()]);
+
             return back()->with('error', $e->getMessage());
         }
     }
@@ -89,6 +92,8 @@ class PaymentController extends Controller
 
             return back()->with('success', $approve ? 'Payment approved successfully.' : 'Payment rejected.');
         } catch (\Exception $e) {
+            Log::error('Payment finance approval failed', ['payment_id' => $payment->id, 'error' => $e->getMessage()]);
+
             return back()->with('error', $e->getMessage());
         }
     }
@@ -115,6 +120,8 @@ class PaymentController extends Controller
 
             return back()->with('success', 'Payment marked as paid.');
         } catch (\Exception $e) {
+            Log::error('Payment mark-paid failed', ['payment_id' => $payment->id, 'error' => $e->getMessage()]);
+
             return back()->with('error', $e->getMessage());
         }
     }

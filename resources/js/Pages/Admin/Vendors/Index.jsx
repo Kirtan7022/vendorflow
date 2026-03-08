@@ -2,7 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { AdminLayout, PageHeader, DataTable, Badge, Button } from '@/Components';
 
-export default function VendorsIndex({ vendors = [], currentStatus = 'all', search = '' }) {
+export default function VendorsIndex({ vendors = {}, currentStatus = 'all', search = '' }) {
     const [searchQuery, setSearchQuery] = useState(search);
 
     const handleSearch = (e) => {
@@ -110,7 +110,8 @@ export default function VendorsIndex({ vendors = [], currentStatus = 'all', sear
 
                 <DataTable
                     columns={columns}
-                    data={vendors}
+                    data={vendors?.data || []}
+                    links={vendors?.links || []}
                     emptyMessage="No vendors found"
                     onRowClick={(row) => router.visit(`/admin/vendors/${row.id}`)}
                 />

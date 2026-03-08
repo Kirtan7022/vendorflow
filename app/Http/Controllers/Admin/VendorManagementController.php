@@ -9,6 +9,7 @@ use App\Models\Vendor;
 use App\Services\VendorLifecycleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -96,6 +97,10 @@ class VendorManagementController extends Controller
     {
         $this->authorize('approve', $vendor);
 
+        $request->validate([
+            'comment' => 'nullable|string|max:1000',
+        ]);
+
         /** @var User $actor */
         $actor = $request->user();
 
@@ -104,6 +109,8 @@ class VendorManagementController extends Controller
 
             return back()->with('success', 'Vendor approved and activated!');
         } catch (\Throwable $e) {
+            Log::error('Vendor approval failed', ['vendor_id' => $vendor->id, 'error' => $e->getMessage()]);
+
             return back()->withErrors(['status' => $e->getMessage()]);
         }
     }
@@ -124,6 +131,8 @@ class VendorManagementController extends Controller
 
             return back()->with('success', 'Vendor rejected.');
         } catch (\Throwable $e) {
+            Log::error('Vendor rejection failed', ['vendor_id' => $vendor->id, 'error' => $e->getMessage()]);
+
             return back()->withErrors(['status' => $e->getMessage()]);
         }
     }
@@ -131,6 +140,10 @@ class VendorManagementController extends Controller
     public function activate(Request $request, Vendor $vendor): RedirectResponse
     {
         $this->authorize('activate', $vendor);
+
+        $request->validate([
+            'comment' => 'nullable|string|max:1000',
+        ]);
 
         /** @var User $actor */
         $actor = $request->user();
@@ -140,6 +153,8 @@ class VendorManagementController extends Controller
 
             return back()->with('success', 'Vendor activated!');
         } catch (\Throwable $e) {
+            Log::error('Vendor activation failed', ['vendor_id' => $vendor->id, 'error' => $e->getMessage()]);
+
             return back()->withErrors(['status' => $e->getMessage()]);
         }
     }
@@ -160,6 +175,8 @@ class VendorManagementController extends Controller
 
             return back()->with('success', 'Vendor suspended.');
         } catch (\Throwable $e) {
+            Log::error('Vendor suspension failed', ['vendor_id' => $vendor->id, 'error' => $e->getMessage()]);
+
             return back()->withErrors(['status' => $e->getMessage()]);
         }
     }
@@ -180,6 +197,8 @@ class VendorManagementController extends Controller
 
             return back()->with('success', 'Vendor terminated.');
         } catch (\Throwable $e) {
+            Log::error('Vendor termination failed', ['vendor_id' => $vendor->id, 'error' => $e->getMessage()]);
+
             return back()->withErrors(['status' => $e->getMessage()]);
         }
     }

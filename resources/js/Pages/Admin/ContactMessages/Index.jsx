@@ -223,6 +223,7 @@ export default function Index() {
                 <DataTable
                     columns={columns}
                     data={messages?.data || []}
+                    links={messages?.links || []}
                     emptyMessage="No messages found"
                     onRowClick={(row) => router.visit(`/admin/contact-messages/${row.id}`)}
                 />

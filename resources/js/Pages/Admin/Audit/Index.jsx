@@ -1,6 +1,6 @@
 import { AdminLayout, PageHeader, DataTable, Badge, Card } from '@/Components';
 
-export default function AuditIndex({ logs = [] }) {
+export default function AuditIndex({ logs = {} }) {
     const columns = [
         {
             header: 'Time',
@@ -55,7 +55,8 @@ export default function AuditIndex({ logs = [] }) {
             <Card className="overflow-hidden">
                 <DataTable
                     columns={columns}
-                    data={logs}
+                    data={logs?.data || []}
+                    links={logs?.links || []}
                     emptyMessage="No audit logs recorded"
                     stickyHeader={true}
                 />

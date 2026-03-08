@@ -217,7 +217,7 @@ export default function PaymentsIndex({ payments, stats, currentStatus }) {
                     ))}
                 </StatGrid>
 
-                <div className="flex gap-2 flex-wrap p-1 bg-(--color-bg-tertiary) rounded-xl inline-flex">
+                <div className="inline-flex gap-2 flex-wrap p-1 bg-(--color-bg-tertiary) rounded-xl">
                     {statusFilters.map((status) => (
                         <Link
                             key={status}
@@ -237,6 +237,7 @@ export default function PaymentsIndex({ payments, stats, currentStatus }) {
                 <DataTable
                     columns={columns}
                     data={payments?.data || []}
+                    links={payments?.links || []}
                     emptyMessage="No payment requests found"
                 />
             </div>
