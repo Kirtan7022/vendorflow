@@ -211,7 +211,7 @@ export default function PaymentsIndex({ payments, stats, currentStatus }) {
     return (
         <AdminLayout title="Payment Requests" activeNav="Payments" header={header}>
             <div className="space-y-8">
-                <StatGrid cols={6}>
+                <StatGrid cols={4}>
                     {statCards.map((stat, idx) => (
                         <StatCard key={idx} {...stat} className="h-full" />
                     ))}
@@ -228,8 +228,8 @@ export default function PaymentsIndex({ payments, stats, currentStatus }) {
                                     : 'text-(--color-text-tertiary) hover:text-(--color-text-primary) hover:bg-(--color-bg-primary)/50'
                             }`}
                         >
-                            {status.replace('_', ' ').charAt(0).toUpperCase() +
-                                status.replace('_', ' ').slice(1)}
+                            {status.replaceAll('_', ' ').charAt(0).toUpperCase() +
+                                status.replaceAll('_', ' ').slice(1)}
                         </Link>
                     ))}
                 </div>

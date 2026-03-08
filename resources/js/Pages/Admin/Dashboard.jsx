@@ -243,7 +243,7 @@ export default function AdminDashboard({
                                                     <div className="text-sm text-(--color-text-secondary)">
                                                         {formatCurrency(payment.amount)} -{' '}
                                                         <span className="capitalize">
-                                                            {payment.status.replace('_', ' ')}
+                                                            {payment.status.replaceAll('_', ' ')}
                                                         </span>
                                                     </div>
                                                 </div>

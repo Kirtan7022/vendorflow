@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import AppIcon from './AppIcon';
 
 export default function Modal({ isOpen, onClose, title, children, footer = null, size = 'md' }) {
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const sizeClasses = {

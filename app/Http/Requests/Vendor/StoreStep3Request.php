@@ -27,7 +27,7 @@ class StoreStep3Request extends FormRequest
         return [
             'documents' => 'nullable|array',
             'documents.*.document_type_id' => 'required|exists:document_types,id',
-            'documents.*.file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max, restricted types
+            'documents.*.file' => 'required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240',
             'documents.*.expiry_date' => 'nullable|date|after_or_equal:today',
         ];
     }

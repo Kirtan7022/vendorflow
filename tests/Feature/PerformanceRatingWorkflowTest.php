@@ -8,8 +8,8 @@ use App\Models\ScoreHistory;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 class PerformanceRatingWorkflowTest extends TestCase
 {

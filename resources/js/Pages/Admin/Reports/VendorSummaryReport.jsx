@@ -55,7 +55,7 @@ export default function VendorSummaryReport({ vendors, stats, filters }) {
             active: 'success',
             suspended: 'danger',
         };
-        return <Badge variant={variants[status] || 'default'}>{status.replace('_', ' ')}</Badge>;
+        return <Badge variant={variants[status] || 'default'}>{status.replaceAll('_', ' ')}</Badge>;
     };
 
     const getComplianceBadge = (status) => {
@@ -64,7 +64,7 @@ export default function VendorSummaryReport({ vendors, stats, filters }) {
             non_compliant: 'danger',
             pending: 'warning',
         };
-        return <Badge variant={variants[status] || 'default'}>{status.replace('_', ' ')}</Badge>;
+        return <Badge variant={variants[status] || 'default'}>{status.replaceAll('_', ' ')}</Badge>;
     };
 
     const columns = [

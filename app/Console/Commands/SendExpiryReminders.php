@@ -41,7 +41,7 @@ class SendExpiryReminders extends Command
             $remindersSent = 0;
 
             foreach ($expiringDocs as $doc) {
-                $daysUntilExpiry = Carbon::now()->diffInDays($doc->expiry_date, false);
+                $daysUntilExpiry = (int) Carbon::now()->startOfDay()->diffInDays(Carbon::parse($doc->expiry_date)->startOfDay(), false);
 
                 // Send reminders at 30, 15, 7, 3, 1 days before expiry
                 if (in_array($daysUntilExpiry, [30, 15, 7, 3, 1])) {

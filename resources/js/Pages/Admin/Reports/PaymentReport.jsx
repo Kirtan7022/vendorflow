@@ -58,7 +58,7 @@ export default function PaymentReport({ payments, stats, filters }) {
             paid: 'success',
             rejected: 'danger',
         };
-        return <Badge variant={variants[status] || 'default'}>{status.replace('_', ' ')}</Badge>;
+        return <Badge variant={variants[status] || 'default'}>{status.replaceAll('_', ' ')}</Badge>;
     };
 
     const columns = [

@@ -60,9 +60,9 @@ class EvaluateVendorCompliance extends Command
                 $this->info('Evaluated '.count($results).' vendors.');
 
                 $table = [];
-                foreach ($results as $vendorId => $result) {
+                foreach ($results as $vId => $result) {
                     $table[] = [
-                        $vendorId,
+                        $vId,
                         $result['score'],
                         $result['status'],
                         $result['failures'].'/'.$result['rules_evaluated'],

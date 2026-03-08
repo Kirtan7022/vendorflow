@@ -1,138 +1,135 @@
-# =========================================================
-# VendorFlow .gitignore (Laravel + React/Vite)
-# =========================================================
+# ==============================================================================
+# VendorFlow .gitignore - Laravel + React/Vite + Node.js
+# ==============================================================================
 
-# Dependencies
+# DEPENDENCIES
 /vendor/
 /node_modules/
 auth.json
 
-# Environment files and local secrets
+# ENVIRONMENT & SECRETS
 .env
 .env.*
 !.env.example
+.vault
 
-# Build artifacts
-/public/build/
-/public/hot
+# LARAVEL RUNTIME & CACHE
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+/storage/*.key
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/app/*
+!/storage/app/.gitkeep
+/storage/app/public
 /public/storage
+/public/hot
+
+# BUILD & ARTIFACTS
+/public/build/
 /public/mix-manifest.json
 .vite/
+dist/
+build/
+out/
 
-# Laravel runtime files
-/bootstrap/cache/*
-!/bootstrap/cache/.gitignore
+# DATABASES
+/database/*.sqlite
+/database/*.sqlite-journal
 
-/storage/*.key
-/storage/app/*
-!/storage/app/.gitignore
-/storage/framework/cache/*
-!/storage/framework/cache/.gitignore
-/storage/framework/sessions/*
-!/storage/framework/sessions/.gitignore
-/storage/framework/testing/*
-!/storage/framework/testing/.gitignore
-/storage/framework/views/*
-!/storage/framework/views/.gitignore
-/storage/logs/*
-!/storage/logs/.gitignore
-
-# Testing artifacts and reports
+# TESTING & COVERAGE
 /coverage/
 /.phpunit.cache/
 .phpunit.result.cache
 .php-cs-fixer.cache
-.phpactor.json
 .phpstan.cache/
 .pest/
-clover.xml
-junit.xml
-phpunit.xml
-!phpunit.xml.dist
+.nyc_output/
+*.clover
+coverage-final.json
 /tests/Browser/screenshots/
 /tests/Browser/console/
-.nyc_output/
-coverage-final.json
-
-# Local databases
-/database/*.sqlite
-/database/*.sqlite-journal
-
-# IDE/editor metadata
-.idea/
-.vscode/
-.vscode-test/
-*.iml
-*.swp
-*.swo
-*.swn
-*.sublime-workspace
-*.sublime-project
-.editorconfig.bak
-.fleet/
-.idea_modules/
-.history/
-
-# OS-generated files
-.DS_Store
-Thumbs.db
-desktop.ini
-[Dd]esktop.ini
-ehthumbs.db
-$RECYCLE.BIN/
-._*
-.AppleDouble
-.LSOverride
-.TemporaryItems
-Icon?
-.Spotlight-V100
-.Trashes
-
-# Local machine/project temp files
-.cache/
-.tmp/
-tmp/
-temp/
-.turbo/
-.vault
-.vagrant/
-.php-version
-Homestead.yaml
-Homestead.json
-manual_test_data.txt
+Test Results - Main.xml
 test_output.txt
+manual_test_data.txt
+
+# LOGS & TEMPORARY FILES
+*.log
+*.pid
+*.seed
+*.stackdump
+nohup.out
 *.tmp
 *.bak
 *.orig
 *.rej
 *~
-*.pid
-*.seed
-*.stackdump
-nohup.out
 *.old
 *.save
-*.temp
 *.cache
-
-# Logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Frontend/build tool temporary caches
+# IDE & EDITOR CONFIGURATION
+.idea/
+.vscode/
+.vscode-test/
+.fleet/
+*.iml
+*.sublime-workspace
+*.sublime-project
+.editorconfig.bak
+.history/
+*.swp
+*.swo
+*.swn
+
+# CODE ANALYSIS CACHES
 .eslintcache
 .stylelintcache
+.phpactor.json
+*.tsbuildinfo
+
+# BUILD & STYLE CACHES
 .sass-cache/
 .parcel-cache/
 .cache-loader/
-*.tsbuildinfo
 
-# Misc generated folders (non-source)
-dist/
-out/
-build/
-storybook-static/
+# LOCAL DEVELOPMENT
+.php-version
+.turbo/
+.vagrant/
+Homestead.yaml
+Homestead.json
+.cache/
+.tmp/
+tmp/
+temp/
+
+# OS-SPECIFIC FILES
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+._*
+.AppleDouble
+.LSOverride
+.TemporaryItems
+.Spotlight-V100
+.Trashes
+
+
+.agents/
+.ai

@@ -153,6 +153,7 @@ export default function Navbar({
                             </NavLink>
                         ))}
 
+                        {user && (
                         <MenuDropdown
                             id="create-tools"
                             label="Create Tools"
@@ -160,6 +161,7 @@ export default function Navbar({
                             activeDropdown={activeDropdown}
                             setActiveDropdown={setActiveDropdown}
                         />
+                        )}
 
                         {actions && <div className="ml-2">{actions}</div>}
                     </div>
@@ -238,6 +240,7 @@ export default function Navbar({
                             ))}
                         </div>
 
+                        {user && (
                         <div className="rounded-xl border border-(--color-border-secondary) p-2">
                             <p className="px-2 pb-1 text-xs uppercase tracking-wide text-(--color-text-muted)">
                                 Create Tools
@@ -253,6 +256,7 @@ export default function Navbar({
                                 </Link>
                             ))}
                         </div>
+                        )}
 
                         {!user && (
                             <div className="grid grid-cols-2 gap-2">

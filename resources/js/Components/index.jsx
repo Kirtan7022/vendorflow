@@ -1,6 +1,10 @@
 // =====================================
 // LAYOUT COMPONENTS
 // =====================================
+import React from 'react';
+import { Link } from '@inertiajs/react';
+import AppIconComponent from './AppIcon';
+
 export { default as AdminLayout } from './AdminLayout';
 export { default as VendorLayout } from './VendorLayout';
 export { default as GuestLayout, AuthLayout } from './GuestLayout';
@@ -62,8 +66,6 @@ export {
 // =====================================
 // BUTTON COMPONENTS
 // =====================================
-import { Link } from '@inertiajs/react';
-import AppIconComponent from './AppIcon';
 
 export function Button({
     children,
@@ -190,5 +192,3 @@ export function CopyButton({ text, className = '' }) {
         </button>
     );
 }
-
-import React from 'react';

@@ -28,10 +28,10 @@ class SecurityHeadersMiddleware
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=()');
 
         if ($isDocumentPreview) {
-            // Relax preview response headers for browser-native PDF viewers inside same-origin iframes.
+            // Apply restrictive CSP for document previews to prevent XSS via uploaded files.
             $response->headers->remove('Cross-Origin-Opener-Policy');
-            $response->headers->remove('Cross-Origin-Resource-Policy');
-            $response->headers->remove('Content-Security-Policy');
+            $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
+            $response->headers->set('Content-Security-Policy', "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'self';");
         } else {
             $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
             $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');

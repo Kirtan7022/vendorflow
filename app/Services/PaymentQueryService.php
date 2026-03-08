@@ -14,7 +14,7 @@ class PaymentQueryService
     {
         $status = (string) $request->query('status', 'all');
 
-        $query = PaymentRequest::with(['vendor', 'requester'])
+        $query = PaymentRequest::with(['vendor:id,company_name', 'requester:id,name'])
             ->orderBy('created_at', 'desc');
 
         if ($status !== 'all') {

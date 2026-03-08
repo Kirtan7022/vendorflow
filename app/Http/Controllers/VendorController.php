@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Vendor\StorePaymentRequest;
-
 use App\Http\Requests\Vendor\UpdateProfileRequest;
 use App\Http\Requests\Vendor\UploadDocumentRequest;
 use App\Models\ComplianceResult;
@@ -15,7 +14,6 @@ use App\Services\VendorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class VendorController extends Controller
@@ -125,7 +123,12 @@ class VendorController extends Controller
 
             return back()->with('success', 'Document uploaded successfully!');
         } catch (\Exception $e) {
-            return back()->withErrors(['upload' => 'Upload failed: ' . $e->getMessage()]);
+            \Illuminate\Support\Facades\Log::error('Document upload failed', [
+                'vendor_id' => $vendor->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors(['upload' => 'Upload failed. Please try again.']);
         }
     }
 
@@ -171,30 +174,19 @@ class VendorController extends Controller
                 $user,
                 (float) $validated['amount'],
                 $validated['description'],
-                $validated['invoice_number'] ?? null
+                $validated['invoice_number'] ?? null,
+                $validated['due_date'] ?? null
             );
 
             return back()->with('success', 'Payment request submitted successfully!');
         } catch (\Throwable $e) {
-            return back()->withErrors(['submit' => $e->getMessage()]);
+            \Illuminate\Support\Facades\Log::error('Payment request failed', [
+                'vendor_id' => $vendor->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors(['submit' => 'Failed to submit payment request. Please try again.']);
         }
-    }
-
-    /**
-     * Update vendor internal notes.
-     */
-    public function updateNotes(Request $request, Vendor $vendor)
-    {
-        $validated = $request->validate([
-            'notes' => 'nullable|string|max:5000',
-            'internal_notes' => 'nullable|string|max:5000',
-        ]);
-
-        $vendor->update([
-            'internal_notes' => $validated['internal_notes'] ?? $validated['notes'] ?? null,
-        ]);
-
-        return back()->with('success', 'Notes updated successfully!');
     }
 
     /**
@@ -294,7 +286,7 @@ class VendorController extends Controller
         }
 
         $vendor->load([
-            'performanceScores' => fn($q) => $q->with('metric')->latest()->take(10),
+            'performanceScores' => fn ($q) => $q->with('metric')->latest()->take(10),
         ]);
 
         $metrics = \App\Models\PerformanceMetric::where('is_active', true)

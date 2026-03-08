@@ -16,14 +16,18 @@ class ReportService
     public function dashboardStats(): array
     {
         $totalVendors = Vendor::count();
-        $compliantVendors = Vendor::where('compliance_status', 'compliant')->count();
+        $compliantVendors = Vendor::where('compliance_status', Vendor::COMPLIANCE_COMPLIANT)->count();
 
         return [
             'total_vendors' => $totalVendors,
-            'active_vendors' => Vendor::where('status', 'active')->count(),
+            'active_vendors' => Vendor::where('status', Vendor::STATUS_ACTIVE)->count(),
             'compliance_rate' => round(($compliantVendors / max($totalVendors, 1)) * 100),
-            'pending_payments' => PaymentRequest::whereIn('status', ['requested', 'pending_ops', 'pending_finance'])->count(),
-            'total_paid' => PaymentRequest::where('status', 'paid')->sum('amount'),
+            'pending_payments' => PaymentRequest::whereIn('status', [
+                PaymentRequest::STATUS_REQUESTED,
+                PaymentRequest::STATUS_PENDING_OPS,
+                PaymentRequest::STATUS_PENDING_FINANCE,
+            ])->count(),
+            'total_paid' => PaymentRequest::where('status', PaymentRequest::STATUS_PAID)->sum('amount'),
         ];
     }
 
@@ -44,17 +48,23 @@ class ReportService
             $query->where('status', $request->status);
         }
 
+        $pendingStatuses = [
+            PaymentRequest::STATUS_REQUESTED,
+            PaymentRequest::STATUS_PENDING_OPS,
+            PaymentRequest::STATUS_PENDING_FINANCE,
+        ];
+
         return [
             'payments' => $query->orderBy('created_at', 'desc')->paginate(20),
             'stats' => [
                 'total_amount' => PaymentRequest::sum('amount'),
-                'pending_count' => PaymentRequest::whereIn('status', ['requested', 'pending_ops', 'pending_finance'])->count(),
-                'pending_amount' => PaymentRequest::whereIn('status', ['requested', 'pending_ops', 'pending_finance'])->sum('amount'),
-                'approved_count' => PaymentRequest::where('status', 'approved')->count(),
-                'approved_amount' => PaymentRequest::where('status', 'approved')->sum('amount'),
-                'paid_count' => PaymentRequest::where('status', 'paid')->count(),
-                'paid_amount' => PaymentRequest::where('status', 'paid')->sum('amount'),
-                'rejected_count' => PaymentRequest::where('status', 'rejected')->count(),
+                'pending_count' => PaymentRequest::whereIn('status', $pendingStatuses)->count(),
+                'pending_amount' => PaymentRequest::whereIn('status', $pendingStatuses)->sum('amount'),
+                'approved_count' => PaymentRequest::where('status', PaymentRequest::STATUS_APPROVED)->count(),
+                'approved_amount' => PaymentRequest::where('status', PaymentRequest::STATUS_APPROVED)->sum('amount'),
+                'paid_count' => PaymentRequest::where('status', PaymentRequest::STATUS_PAID)->count(),
+                'paid_amount' => PaymentRequest::where('status', PaymentRequest::STATUS_PAID)->sum('amount'),
+                'rejected_count' => PaymentRequest::where('status', PaymentRequest::STATUS_REJECTED)->count(),
             ],
             'filters' => [
                 'start_date' => $request->start_date,
@@ -133,7 +143,7 @@ class ReportService
                 $vendor->contact_person ?? 'N/A',
                 $vendor->contact_email ?? 'N/A',
                 ucfirst(str_replace('_', ' ', $vendor->status)),
-                ucfirst(str_replace('_', ' ', $vendor->compliance_status ?? 'pending')),
+                ucfirst(str_replace('_', ' ', $vendor->compliance_status ?? Vendor::COMPLIANCE_PENDING)),
                 $vendor->compliance_score ?? 0,
                 $vendor->performance_score ?? 0,
                 $vendor->created_at->format('Y-m-d'),
@@ -145,7 +155,7 @@ class ReportService
 
     public function exportPerformanceCsv(Request $request): Response
     {
-        $query = Vendor::where('status', 'active');
+        $query = Vendor::where('status', Vendor::STATUS_ACTIVE);
 
         if ($request->filled('min_score')) {
             $query->where('performance_score', '>=', $request->min_score);
@@ -187,7 +197,7 @@ class ReportService
             $rows[] = [
                 $vendor->id,
                 $vendor->company_name,
-                ucfirst(str_replace('_', ' ', $vendor->compliance_status ?? 'pending')),
+                ucfirst(str_replace('_', ' ', $vendor->compliance_status ?? Vendor::COMPLIANCE_PENDING)),
                 $vendor->compliance_score ?? 0,
                 ucfirst($vendor->status),
                 $vendor->created_at->format('Y-m-d'),
@@ -258,11 +268,11 @@ class ReportService
             'vendors' => $vendors,
             'stats' => [
                 'total' => Vendor::count(),
-                'active' => Vendor::where('status', 'active')->count(),
-                'pending' => Vendor::whereIn('status', ['submitted', 'under_review'])->count(),
-                'suspended' => Vendor::where('status', 'suspended')->count(),
-                'compliant' => Vendor::where('compliance_status', 'compliant')->count(),
-                'non_compliant' => Vendor::where('compliance_status', 'non_compliant')->count(),
+                'active' => Vendor::where('status', Vendor::STATUS_ACTIVE)->count(),
+                'pending' => Vendor::whereIn('status', [Vendor::STATUS_SUBMITTED, Vendor::STATUS_UNDER_REVIEW])->count(),
+                'suspended' => Vendor::where('status', Vendor::STATUS_SUSPENDED)->count(),
+                'compliant' => Vendor::where('compliance_status', Vendor::COMPLIANCE_COMPLIANT)->count(),
+                'non_compliant' => Vendor::where('compliance_status', Vendor::COMPLIANCE_NON_COMPLIANT)->count(),
                 'avg_compliance_score' => round(Vendor::avg('compliance_score') ?? 0),
                 'avg_performance_score' => round(Vendor::avg('performance_score') ?? 0),
             ],
@@ -278,7 +288,7 @@ class ReportService
      */
     public function performanceReportData(Request $request): array
     {
-        $query = Vendor::where('status', 'active');
+        $query = Vendor::where('status', Vendor::STATUS_ACTIVE);
 
         if ($request->filled('min_score')) {
             $query->where('performance_score', '>=', $request->min_score);
@@ -294,12 +304,12 @@ class ReportService
                 'created_at',
             ])->orderBy('performance_score', 'desc')->paginate(20),
             'stats' => [
-                'total_active' => Vendor::where('status', 'active')->count(),
-                'avg_performance' => round(Vendor::where('status', 'active')->avg('performance_score') ?? 0),
-                'high_performers' => Vendor::where('status', 'active')->where('performance_score', '>=', 80)->count(),
-                'medium_performers' => Vendor::where('status', 'active')->whereBetween('performance_score', [50, 79])->count(),
-                'low_performers' => Vendor::where('status', 'active')->where('performance_score', '<', 50)->count(),
-                'top_scorer' => Vendor::where('status', 'active')->orderBy('performance_score', 'desc')->first()?->company_name ?? 'N/A',
+                'total_active' => Vendor::where('status', Vendor::STATUS_ACTIVE)->count(),
+                'avg_performance' => round(Vendor::where('status', Vendor::STATUS_ACTIVE)->avg('performance_score') ?? 0),
+                'high_performers' => Vendor::where('status', Vendor::STATUS_ACTIVE)->where('performance_score', '>=', 80)->count(),
+                'medium_performers' => Vendor::where('status', Vendor::STATUS_ACTIVE)->whereBetween('performance_score', [50, 79])->count(),
+                'low_performers' => Vendor::where('status', Vendor::STATUS_ACTIVE)->where('performance_score', '<', 50)->count(),
+                'top_scorer' => Vendor::where('status', Vendor::STATUS_ACTIVE)->orderBy('performance_score', 'desc')->first()?->company_name ?? 'N/A',
             ],
             'filters' => [
                 'min_score' => $request->min_score ?? '',
@@ -329,9 +339,12 @@ class ReportService
             ])->orderBy('compliance_score', 'asc')->paginate(20),
             'stats' => [
                 'total_vendors' => Vendor::count(),
-                'compliant' => Vendor::where('compliance_status', 'compliant')->count(),
-                'non_compliant' => Vendor::where('compliance_status', 'non_compliant')->count(),
-                'pending' => Vendor::where('compliance_status', 'pending')->orWhereNull('compliance_status')->count(),
+                'compliant' => Vendor::where('compliance_status', Vendor::COMPLIANCE_COMPLIANT)->count(),
+                'non_compliant' => Vendor::where('compliance_status', Vendor::COMPLIANCE_NON_COMPLIANT)->count(),
+                'pending' => Vendor::where(function ($q) {
+                    $q->where('compliance_status', Vendor::COMPLIANCE_PENDING)
+                        ->orWhereNull('compliance_status');
+                })->count(),
                 'avg_score' => round(Vendor::avg('compliance_score') ?? 0),
             ],
             'filters' => [

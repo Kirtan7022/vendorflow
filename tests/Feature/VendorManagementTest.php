@@ -64,7 +64,7 @@ class VendorManagementTest extends TestCase
         $response->assertInertia(
             fn ($page) => $page
                 ->component('Admin/Vendors/Index')
-                ->has('vendors', 1)
+                ->has('vendors.data', 1)
         );
     }
 

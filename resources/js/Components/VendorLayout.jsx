@@ -8,13 +8,13 @@ import Sidebar from './Sidebar';
 // =====================================
 export default function VendorLayout({
     children,
+    vendor = null,
     title = 'Vendor Portal',
     activeNav = 'Dashboard',
     header = null,
     badges = {},
 }) {
-    const { auth, flash } = usePage().props;
-    const vendor = auth?.user?.vendor;
+    const { flash } = usePage().props;
 
     // Show onboarding in nav if vendor not complete
     const customNav =

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use App\Http\Requests\Admin\UpdateContactMessageRequest;
 use App\Http\Requests\StoreContactMessageRequest;
+use App\Models\AuditLog;
 use App\Models\ContactMessage;
 use App\Services\ContactMessageService;
 use Illuminate\Http\Request;

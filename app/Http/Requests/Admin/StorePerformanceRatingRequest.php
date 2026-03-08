@@ -4,7 +4,6 @@ namespace App\Http\Requests\Admin;
 
 use App\Models\PerformanceMetric;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Validator;
 
 class StorePerformanceRatingRequest extends FormRequest
@@ -14,8 +13,7 @@ class StorePerformanceRatingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Add specific permission check if needed, e.g., $user->can('rate-vendors')
-        return Auth::check();
+        return $this->user()?->hasAnyRole(['ops_manager', 'super_admin']) === true;
     }
 
     /**

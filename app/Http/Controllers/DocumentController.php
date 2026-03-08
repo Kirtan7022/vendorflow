@@ -35,8 +35,9 @@ class DocumentController extends Controller
 
         // Search by vendor name
         if ($request->has('search') && $request->search) {
-            $query->whereHas('vendor', function ($q) use ($request) {
-                $q->where('company_name', 'like', '%'.$request->search.'%');
+            $escapedSearch = str_replace(['%', '_'], ['\\%', '\\_'], $request->search);
+            $query->whereHas('vendor', function ($q) use ($escapedSearch) {
+                $q->where('company_name', 'like', '%'.$escapedSearch.'%');
             });
         }
 
@@ -187,9 +188,11 @@ class DocumentController extends Controller
 
         $mimeType = mime_content_type($path);
 
+        $safeName = str_replace(['"', "\r", "\n", "\0"], '', $document->file_name);
+
         return response()->file($path, [
             'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="'.$document->file_name.'"',
+            'Content-Disposition' => 'inline; filename="'.$safeName.'"',
         ]);
     }
 

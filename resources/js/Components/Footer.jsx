@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import AppIcon from './AppIcon';
 import Logo from './Logo';
 
@@ -26,6 +26,7 @@ const adminLinks = [
 
 export default function Footer({ links = defaultLinks, showSocial = true, className = '' }) {
     const year = new Date().getFullYear();
+    const { auth } = usePage().props;
 
     return (
         <footer
@@ -103,6 +104,7 @@ export default function Footer({ links = defaultLinks, showSocial = true, classN
                         </div>
                     </div>
 
+                    {auth?.user && !auth?.roles?.includes('vendor') && (
                     <div className="md:col-span-3">
                         <h3 className="text-sm font-semibold text-(--color-text-primary) mb-3">
                             Admin
@@ -119,6 +121,7 @@ export default function Footer({ links = defaultLinks, showSocial = true, classN
                             ))}
                         </div>
                     </div>
+                    )}
                 </div>
 
                 <div className="mt-10 pt-6 border-t border-(--color-border-secondary) flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

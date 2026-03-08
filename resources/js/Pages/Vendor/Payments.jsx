@@ -183,7 +183,7 @@ export default function Payments({ vendor, payments = { data: [] } }) {
                                                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[payment.status] || 'bg-(--color-bg-tertiary) text-(--color-text-primary)'}`}
                                                 >
                                                     <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current" />
-                                                    {payment.status?.replace('_', ' ')}
+                                                    {payment.status?.replaceAll('_', ' ')}
                                                 </span>
                                             </td>
                                             <td className="p-4 text-(--color-text-tertiary) text-sm">

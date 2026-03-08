@@ -23,13 +23,13 @@ Route::get('/', function () {
 });
 
 // Static pages
-Route::get('/about', fn() => Inertia::render('About'))->name('about');
-Route::get('/contact', fn() => Inertia::render('Contact'))->name('contact');
+Route::get('/about', fn () => Inertia::render('About'))->name('about');
+Route::get('/contact', fn () => Inertia::render('Contact'))->name('contact');
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'])
     ->middleware('throttle:contact-form')
     ->name('contact.store');
-Route::get('/privacy', fn() => Inertia::render('Privacy'))->name('privacy');
-Route::get('/terms', fn() => Inertia::render('Terms'))->name('terms');
+Route::get('/privacy', fn () => Inertia::render('Privacy'))->name('privacy');
+Route::get('/terms', fn () => Inertia::render('Terms'))->name('terms');
 
 Route::middleware('auth')->group(function () {
     // Default Dashboard - redirects based on role
@@ -62,7 +62,9 @@ Route::middleware('auth')->group(function () {
             Route::post('/step1', [VendorOnboardingController::class, 'storeStep1'])->name('.step1');
             Route::post('/step2', [VendorOnboardingController::class, 'storeStep2'])->name('.step2');
             Route::post('/step3', [VendorOnboardingController::class, 'storeStep3'])->name('.step3');
-            Route::post('/submit', [VendorOnboardingController::class, 'submit'])->name('.submit');
+            Route::post('/submit', [VendorOnboardingController::class, 'submit'])
+                ->middleware('throttle:sensitive-action')
+                ->name('.submit');
             Route::get('/document/{typeId}', [VendorOnboardingController::class, 'viewDocument'])->name('.document');
         });
         Route::get('/dashboard', [VendorController::class, 'index'])->name('dashboard');
@@ -73,7 +75,9 @@ Route::middleware('auth')->group(function () {
 
         // Documents routes
         Route::get('/documents', [VendorController::class, 'documents'])->name('documents');
-        Route::post('/documents/upload', [VendorController::class, 'uploadDocument'])->name('documents.upload');
+        Route::post('/documents/upload', [VendorController::class, 'uploadDocument'])
+            ->middleware('throttle:sensitive-action')
+            ->name('documents.upload');
 
         // Compliance route
         Route::get('/compliance', [VendorController::class, 'compliance'])->name('compliance');
@@ -83,7 +87,9 @@ Route::middleware('auth')->group(function () {
 
         // Payments routes
         Route::get('/payments', [VendorController::class, 'payments'])->name('payments');
-        Route::post('/payments/request', [VendorController::class, 'createPaymentRequest'])->name('payments.request');
+        Route::post('/payments/request', [VendorController::class, 'createPaymentRequest'])
+            ->middleware('throttle:sensitive-action')
+            ->name('payments.request');
 
         // Notifications routes
         Route::get('/notifications', [VendorController::class, 'notifications'])->name('notifications');
@@ -155,8 +161,12 @@ Route::middleware('auth')->group(function () {
     // FINANCE + SUPER ADMIN ROUTES
     // ==========================================
     Route::middleware(['role:finance_manager,super_admin'])->prefix('admin')->name('admin.')->group(function () {
-        Route::post('/payments/{payment}/approve-finance', [PaymentController::class, 'approveFinance'])->name('payments.approve-finance');
-        Route::post('/payments/{payment}/mark-paid', [PaymentController::class, 'markPaid'])->name('payments.mark-paid');
+        Route::post('/payments/{payment}/approve-finance', [PaymentController::class, 'approveFinance'])
+            ->middleware('throttle:sensitive-action')
+            ->name('payments.approve-finance');
+        Route::post('/payments/{payment}/mark-paid', [PaymentController::class, 'markPaid'])
+            ->middleware('throttle:sensitive-action')
+            ->name('payments.mark-paid');
     });
 
     // ==========================================
@@ -166,17 +176,23 @@ Route::middleware('auth')->group(function () {
         Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
         Route::patch('/compliance/rules/{rule}', [ComplianceController::class, 'updateRule'])->name('compliance.rules.update');
         Route::get('/staff-users', [StaffUserController::class, 'index'])->name('staff-users.index');
-        Route::post('/staff-users', [StaffUserController::class, 'store'])->name('staff-users.store');
+        Route::post('/staff-users', [StaffUserController::class, 'store'])
+            ->middleware('throttle:sensitive-action')
+            ->name('staff-users.store');
     });
 
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
+        ->middleware('throttle:sensitive-action')
+        ->name('profile.password');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->middleware('throttle:account-delete')
+        ->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 // Fallback route for undefined routes - redirects to appropriate dashboard
 Route::fallback(function () {

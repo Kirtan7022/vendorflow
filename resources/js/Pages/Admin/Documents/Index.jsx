@@ -124,7 +124,7 @@ export default function DocumentsIndex({ documents, currentStatus = 'pending' })
             header: 'File',
             render: (row) => (
                 <a
-                    href={`/admin/documents/${row.id}/download`}
+                    href={`/documents/${row.id}/download`}
                     className="text-(--color-brand-primary) hover:underline"
                     target="_blank"
                     rel="noreferrer"

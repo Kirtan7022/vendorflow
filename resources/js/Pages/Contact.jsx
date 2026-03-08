@@ -106,6 +106,7 @@ export default function Contact() {
                                             placeholder="Your name"
                                             required
                                         />
+                                        {form.errors.name && <p className="text-sm text-red-500">{form.errors.name}</p>}
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium text-(--color-text-secondary)">
@@ -121,6 +122,7 @@ export default function Contact() {
                                             placeholder="you@company.com"
                                             required
                                         />
+                                        {form.errors.email && <p className="text-sm text-red-500">{form.errors.email}</p>}
                                     </div>
                                 </div>
 
@@ -138,6 +140,7 @@ export default function Contact() {
                                         placeholder="What do you need help with?"
                                         required
                                     />
+                                    {form.errors.subject && <p className="text-sm text-red-500">{form.errors.subject}</p>}
                                 </div>
 
                                 <div className="space-y-1">
@@ -154,6 +157,7 @@ export default function Contact() {
                                         placeholder="Share your requirements"
                                         required
                                     />
+                                    {form.errors.message && <p className="text-sm text-red-500">{form.errors.message}</p>}
                                 </div>
 
                                 <button

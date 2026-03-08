@@ -4,7 +4,7 @@ export default function Compliance({ vendor, complianceResults = [], rules = [] 
     const complianceScore = vendor?.compliance_score || 0;
     const passedRules = complianceResults.filter((r) => r.status === 'pass').length;
     const failedRules = complianceResults.filter((r) => r.status === 'fail').length;
-    const pendingRules = rules.length - complianceResults.length;
+    const pendingRules = Math.max(0, rules.length - complianceResults.length);
 
     const getScoreColor = (score) => {
         if (score >= 80) return 'text-(--color-success)';

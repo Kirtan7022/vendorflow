@@ -82,8 +82,8 @@ class VendorOnboardingTest extends TestCase
             'current_step' => 2,
             'status' => 'draft',
             'data' => [
-                'step1' => ['company_name' => 'Test Co']
-            ]
+                'step1' => ['company_name' => 'Test Co'],
+            ],
         ]);
 
         $response = $this->actingAs($this->vendorUser)
@@ -110,7 +110,7 @@ class VendorOnboardingTest extends TestCase
             'data' => [
                 'step1' => ['company_name' => 'Test Co'],
                 'step2' => ['bank_name' => 'Test Bank'],
-            ]
+            ],
         ]);
 
         $file = UploadedFile::fake()->create('pan.pdf', 100);
@@ -131,7 +131,7 @@ class VendorOnboardingTest extends TestCase
         $this->assertNotEmpty($application->data['step3']['documents']);
         $this->assertEquals(4, $application->current_step);
         // The file path should contain the application ID
-        $this->assertStringContainsString('vendor-applications/' . $application->id, $application->data['step3']['documents'][0]['file_path']);
+        $this->assertStringContainsString('vendor-applications/'.$application->id, $application->data['step3']['documents'][0]['file_path']);
     }
 
     public function test_vendor_can_submit_application()
@@ -160,12 +160,12 @@ class VendorOnboardingTest extends TestCase
                     'bank_ifsc' => 'TEST0001',
                 ],
                 // Step 3 will be set up with a real temp file
-            ]
+            ],
         ]);
 
         // Create a real temp file
         $file = UploadedFile::fake()->create('pan.pdf', 100);
-        $path = $file->store('vendor-applications/' . $application->id . '/temp', 'private');
+        $path = $file->store('vendor-applications/'.$application->id.'/temp', 'private');
 
         // Update application data with document info
         $data = $application->data;

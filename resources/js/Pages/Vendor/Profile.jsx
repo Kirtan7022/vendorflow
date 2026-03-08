@@ -258,7 +258,7 @@ export default function Profile({ vendor }) {
                                                 Current Status
                                             </div>
                                             <div className="text-lg font-semibold text-(--color-text-primary) capitalize mt-1">
-                                                {vendor?.status?.replace('_', ' ') || 'Draft'}
+                                                {vendor?.status?.replaceAll('_', ' ') || 'Draft'}
                                             </div>
                                         </div>
                                         <Badge status={vendor?.status || 'draft'} size="lg" />

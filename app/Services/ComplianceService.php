@@ -9,6 +9,7 @@ use App\Models\DocumentType;
 use App\Models\Vendor;
 use App\Models\VendorDocument;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ComplianceService
 {
@@ -36,48 +37,51 @@ class ComplianceService
      */
     public function evaluateVendor(Vendor $vendor): array
     {
-        $rules = ComplianceRule::active()->get();
-        $results = [];
-        $totalPenalty = 0;
-        $hasBlockingFailure = false;
+        return DB::transaction(function () use ($vendor) {
+            $rules = ComplianceRule::active()->get();
+            $results = [];
+            $totalPenalty = 0;
+            $hasBlockingFailure = false;
 
-        foreach ($rules as $rule) {
-            $result = $this->evaluateRule($vendor, $rule);
-            $results[] = $result;
+            foreach ($rules as $rule) {
+                $result = $this->evaluateRule($vendor, $rule);
+                $results[] = $result;
 
-            if ($result['status'] === ComplianceResult::STATUS_FAIL) {
-                $totalPenalty += $rule->penalty_points;
+                if ($result['status'] === ComplianceResult::STATUS_FAIL) {
+                    $totalPenalty += $rule->penalty_points;
 
-                if ($rule->blocks_payment || $rule->blocks_activation) {
-                    $hasBlockingFailure = true;
+                    if ($rule->blocks_payment || $rule->blocks_activation) {
+                        $hasBlockingFailure = true;
+                    }
                 }
             }
-        }
 
-        // Calculate compliance score (100 - penalty, min 0)
-        $complianceScore = max(0, 100 - $totalPenalty);
+            // Calculate compliance score (100 - penalty, min 0)
+            $complianceScore = max(0, 100 - $totalPenalty);
 
-        $openFlags = ComplianceFlag::where('vendor_id', $vendor->id)
-            ->where('status', 'open')
-            ->count();
+            // Only count FAIL flags (not WARNING) for blocking threshold
+            $openFailFlags = ComplianceFlag::where('vendor_id', $vendor->id)
+                ->where('status', 'open')
+                ->where('severity', '!=', ComplianceRule::SEVERITY_LOW)
+                ->count();
 
-        // Determine compliance status
-        $complianceStatus = $this->determineComplianceStatus($complianceScore, $hasBlockingFailure, $openFlags);
+            // Determine compliance status
+            $complianceStatus = $this->determineComplianceStatus($complianceScore, $hasBlockingFailure, $openFailFlags);
 
-        // Update vendor
-        $vendor->update([
-            'compliance_score' => $complianceScore,
-            'compliance_status' => $complianceStatus,
-        ]);
+            // Update vendor
+            $vendor->compliance_score = $complianceScore;
+            $vendor->compliance_status = $complianceStatus;
+            $vendor->save();
 
-        return [
-            'vendor_id' => $vendor->id,
-            'score' => $complianceScore,
-            'status' => $complianceStatus,
-            'rules_evaluated' => count($results),
-            'failures' => collect($results)->where('status', ComplianceResult::STATUS_FAIL)->count(),
-            'open_flags' => $openFlags,
-        ];
+            return [
+                'vendor_id' => $vendor->id,
+                'score' => $complianceScore,
+                'status' => $complianceStatus,
+                'rules_evaluated' => count($results),
+                'failures' => collect($results)->where('status', ComplianceResult::STATUS_FAIL)->count(),
+                'open_flags' => $openFailFlags,
+            ];
+        });
     }
 
     /**
@@ -154,6 +158,11 @@ class ComplianceService
                     'resolved_by' => null,
                 ]);
 
+            return;
+        }
+
+        // Only create flags for FAIL status, not WARNING
+        if ($status === ComplianceResult::STATUS_WARNING) {
             return;
         }
 
@@ -259,12 +268,14 @@ class ComplianceService
             return [
                 'status' => ComplianceResult::STATUS_PASS,
                 'details' => "Performance score ({$vendor->performance_score}) meets threshold ({$threshold}).",
+                'metadata' => [],
             ];
         }
 
         return [
             'status' => ComplianceResult::STATUS_FAIL,
             'details' => "Performance score ({$vendor->performance_score}) below threshold ({$threshold}).",
+            'metadata' => [],
         ];
     }
 

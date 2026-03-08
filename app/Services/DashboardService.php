@@ -48,7 +48,8 @@ class DashboardService
      */
     public function pendingVendors(): Collection
     {
-        return Vendor::with('user')
+        return Vendor::with('user:id,email')
+            ->select(['id', 'company_name', 'contact_person', 'status', 'submitted_at', 'user_id'])
             ->whereIn('status', [Vendor::STATUS_SUBMITTED, Vendor::STATUS_UNDER_REVIEW])
             ->latest()
             ->take(5)
@@ -70,7 +71,8 @@ class DashboardService
      */
     public function pendingDocuments(): Collection
     {
-        return VendorDocument::with(['vendor', 'documentType'])
+        return VendorDocument::with(['vendor:id,company_name', 'documentType:id,display_name'])
+            ->select(['id', 'vendor_id', 'document_type_id', 'created_at'])
             ->where('verification_status', VendorDocument::STATUS_PENDING)
             ->latest()
             ->take(5)
@@ -90,7 +92,8 @@ class DashboardService
      */
     public function pendingPayments(): Collection
     {
-        return PaymentRequest::with('vendor')
+        return PaymentRequest::with('vendor:id,company_name')
+            ->select(['id', 'vendor_id', 'amount', 'status', 'created_at'])
             ->whereIn('status', [
                 PaymentRequest::STATUS_REQUESTED,
                 PaymentRequest::STATUS_PENDING_OPS,
@@ -115,7 +118,8 @@ class DashboardService
      */
     public function recentActivity(): Collection
     {
-        return AuditLog::with('user')
+        return AuditLog::with('user:id,name')
+            ->select(['id', 'user_id', 'event', 'auditable_type', 'auditable_id', 'reason', 'created_at'])
             ->latest()
             ->take(10)
             ->get()

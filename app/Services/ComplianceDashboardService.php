@@ -13,11 +13,22 @@ class ComplianceDashboardService
      */
     public function dashboardData(): array
     {
+        $statusCounts = Vendor::query()
+            ->whereIn('compliance_status', [
+                Vendor::COMPLIANCE_COMPLIANT,
+                Vendor::COMPLIANCE_AT_RISK,
+                Vendor::COMPLIANCE_NON_COMPLIANT,
+                Vendor::COMPLIANCE_BLOCKED,
+            ])
+            ->selectRaw('compliance_status, COUNT(*) as count')
+            ->groupBy('compliance_status')
+            ->pluck('count', 'compliance_status');
+
         $stats = [
-            'compliant' => Vendor::where('compliance_status', Vendor::COMPLIANCE_COMPLIANT)->count(),
-            'at_risk' => Vendor::where('compliance_status', Vendor::COMPLIANCE_AT_RISK)->count(),
-            'non_compliant' => Vendor::where('compliance_status', Vendor::COMPLIANCE_NON_COMPLIANT)->count(),
-            'blocked' => Vendor::where('compliance_status', Vendor::COMPLIANCE_BLOCKED)->count(),
+            'compliant' => (int) ($statusCounts[Vendor::COMPLIANCE_COMPLIANT] ?? 0),
+            'at_risk' => (int) ($statusCounts[Vendor::COMPLIANCE_AT_RISK] ?? 0),
+            'non_compliant' => (int) ($statusCounts[Vendor::COMPLIANCE_NON_COMPLIANT] ?? 0),
+            'blocked' => (int) ($statusCounts[Vendor::COMPLIANCE_BLOCKED] ?? 0),
         ];
 
         $atRiskVendors = Vendor::whereIn('compliance_status', [
@@ -25,7 +36,8 @@ class ComplianceDashboardService
             Vendor::COMPLIANCE_NON_COMPLIANT,
             Vendor::COMPLIANCE_BLOCKED,
         ])
-            ->with('user')
+            ->select(['id', 'company_name', 'compliance_status', 'compliance_score', 'user_id'])
+            ->with('user:id,name,email')
             ->orderBy('compliance_score', 'asc')
             ->take(10)
             ->get();
@@ -65,7 +77,7 @@ class ComplianceDashboardService
         $grouped = $results->groupBy('status');
 
         return [
-            'vendor' => $vendor->load('user'),
+            'vendor' => $vendor->load('user:id,name,email'),
             'results' => $results,
             'summary' => [
                 'passing' => $grouped->get(ComplianceResult::STATUS_PASS, collect())->count(),

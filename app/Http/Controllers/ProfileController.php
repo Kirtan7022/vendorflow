@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 
 class ProfileController extends Controller
@@ -50,7 +51,7 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'current_password' => 'required|current_password',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $request->user()->update([

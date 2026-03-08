@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
 class UpdateContactMessageRequest extends FormRequest
 {
@@ -12,8 +11,7 @@ class UpdateContactMessageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Add permission check if needed
-        return Auth::check();
+        return $this->user()?->isStaff() === true;
     }
 
     /**

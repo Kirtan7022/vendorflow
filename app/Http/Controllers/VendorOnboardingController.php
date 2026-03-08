@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Http\Requests\Vendor\StoreStep1Request;
 use App\Http\Requests\Vendor\StoreStep2Request;
 use App\Http\Requests\Vendor\StoreStep3Request;
 use App\Models\DocumentType;
 use App\Models\Vendor;
 use App\Services\VendorService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -33,10 +32,10 @@ class VendorOnboardingController extends Controller
             abort(403);
         }
         $vendor = $user->vendor;
-        $step = $request->query('step', 1);
+        $step = (int) $request->query('step', 1);
 
         // If vendor has already submitted, redirect to dashboard
-        if ($vendor && ! in_array($vendor->status, [Vendor::STATUS_DRAFT])) {
+        if ($vendor && ! in_array($vendor->status, [Vendor::STATUS_DRAFT, Vendor::STATUS_REJECTED])) {
             return redirect()->route('vendor.dashboard');
         }
 
@@ -134,7 +133,7 @@ class VendorOnboardingController extends Controller
         $documents = $data['step3']['documents'] ?? [];
 
         // Path is now: vendor-applications/{id}/temp/filename
-        $expectedPrefix = 'vendor-applications/' . $application->id . '/';
+        $expectedPrefix = 'vendor-applications/'.$application->id.'/';
 
         foreach ($documents as $doc) {
             if ($doc['document_type_id'] == $typeId) {
@@ -202,7 +201,12 @@ class VendorOnboardingController extends Controller
 
             return redirect()->route('vendor.dashboard')->with('success', 'Application submitted successfully!');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to submit application: ' . $e->getMessage()]);
+            \Illuminate\Support\Facades\Log::error('Application submission failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors(['error' => 'Failed to submit application. Please try again or contact support.']);
         }
     }
 }

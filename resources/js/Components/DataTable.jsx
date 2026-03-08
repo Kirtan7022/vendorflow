@@ -1,6 +1,11 @@
 import { Link } from '@inertiajs/react';
 import AppIcon from './AppIcon';
 
+const decodePaginationLabel = (label) => {
+    const map = { '&laquo; Previous': '\u00AB Previous', 'Next &raquo;': 'Next \u00BB' };
+    return map[label] ?? label;
+};
+
 const getHeaderLabel = (column) => column.header ?? column.label ?? column.key ?? '';
 
 const getCellValue = (row, column, rowIndex) => {
@@ -133,9 +138,7 @@ export default function DataTable({
                                                 aria-disabled="true"
                                                 className={`${baseClass} opacity-50 cursor-not-allowed`}
                                             >
-                                                <span
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                                />
+                                                <span>{decodePaginationLabel(link.label)}</span>
                                             </span>
                                         );
                                     }
@@ -147,9 +150,7 @@ export default function DataTable({
                                             preserveScroll
                                             className={baseClass}
                                         >
-                                            <span
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                            />
+                                            <span>{decodePaginationLabel(link.label)}</span>
                                         </Link>
                                     );
                                 })}
@@ -183,7 +184,7 @@ export function Card({
                     {action || actions}
                 </div>
             )}
-            <div className={noPadding ? '' : ''}>{children}</div>
+            <div className={noPadding ? '' : 'p-5'}>{children}</div>
         </div>
     );
 }
@@ -209,7 +210,7 @@ export function ListCard({
                     ))
                 ) : (
                     <div className="py-12 text-center">
-                        <span className="text-4xl mb-3 block opacity-80 text-(--color-text-muted) inline-flex justify-center w-full">
+                        <span className="text-4xl mb-3 opacity-80 text-(--color-text-muted) inline-flex justify-center w-full">
                             <AppIcon
                                 name={emptyIcon}
                                 className="h-10 w-10"

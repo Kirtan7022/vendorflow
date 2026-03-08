@@ -7,7 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class VendorApplicationSubmitted extends Notification implements ShouldQueue, \Illuminate\Contracts\Broadcasting\ShouldBroadcast
+class VendorApplicationSubmitted extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -32,11 +32,11 @@ class VendorApplicationSubmitted extends Notification implements ShouldQueue, \I
     public function toMail(object $notifiable): \Illuminate\Notifications\Messages\MailMessage
     {
         return (new \Illuminate\Notifications\Messages\MailMessage)
-            ->subject('New Vendor Application: ' . $this->vendor->company_name)
+            ->subject('New Vendor Application: '.$this->vendor->company_name)
             ->line('A new vendor application has been submitted.')
-            ->line('Company: ' . $this->vendor->company_name)
-            ->line('Submitted by: ' . $this->vendor->user->name)
-            ->action('Review Application', url('/admin/vendors/' . $this->vendor->id));
+            ->line('Company: '.$this->vendor->company_name)
+            ->line('Submitted by: '.$this->vendor->user->name)
+            ->action('Review Application', url('/admin/vendors/'.$this->vendor->id));
     }
 
     /**
@@ -55,8 +55,6 @@ class VendorApplicationSubmitted extends Notification implements ShouldQueue, \I
             'severity' => 'info',
         ];
     }
-
-
 
     /**
      * The event's broadcast name.

@@ -58,6 +58,20 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(120)->by($userId.'|'.$request->ip());
         });
 
+        RateLimiter::for('sensitive-action', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id.'|'.$request->ip());
+        });
+
+        RateLimiter::for('login', function (Request $request) {
+            $throttleKey = strtolower((string) $request->input('email')).'|'.$request->ip();
+
+            return Limit::perMinute(5)->by($throttleKey);
+        });
+
+        RateLimiter::for('account-delete', function (Request $request) {
+            return Limit::perHour(3)->by($request->user()?->id.'|'.$request->ip());
+        });
+
         Gate::policy(Vendor::class, VendorPolicy::class);
         Gate::policy(VendorDocument::class, VendorDocumentPolicy::class);
         Gate::policy(PaymentRequest::class, PaymentRequestPolicy::class);
@@ -138,7 +152,7 @@ class AppServiceProvider extends ServiceProvider
 
             throw new RuntimeException(
                 "Blocked '{$event->command}' on connection '{$connectionName}' (database: '{$database}'). ".
-                "Set ALLOW_DESTRUCTIVE_DB_COMMANDS=true to allow this intentionally."
+                'Set ALLOW_DESTRUCTIVE_DB_COMMANDS=true to allow this intentionally.'
             );
         });
     }

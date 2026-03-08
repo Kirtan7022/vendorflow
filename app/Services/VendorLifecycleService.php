@@ -6,6 +6,7 @@ use App\Models\ComplianceFlag;
 use App\Models\DocumentType;
 use App\Models\User;
 use App\Models\Vendor;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class VendorLifecycleService
@@ -17,26 +18,28 @@ class VendorLifecycleService
      */
     public function approveAndActivate(Vendor $vendor, User $actor, ?string $comment = null): void
     {
-        $note = $comment ?: 'Vendor approved and activated';
+        DB::transaction(function () use ($vendor, $actor, $comment) {
+            $note = $comment ?: 'Vendor approved and activated';
 
-        if ($vendor->status === Vendor::STATUS_SUBMITTED) {
-            $vendor->transitionTo(Vendor::STATUS_UNDER_REVIEW, $actor, $note);
-            $vendor->refresh();
-        }
+            if ($vendor->status === Vendor::STATUS_SUBMITTED) {
+                $vendor->transitionTo(Vendor::STATUS_UNDER_REVIEW, $actor, $note);
+                $vendor->refresh();
+            }
 
-        if ($vendor->status === Vendor::STATUS_UNDER_REVIEW) {
-            $vendor->transitionTo(Vendor::STATUS_APPROVED, $actor, $note);
-            $vendor->refresh();
-        }
+            if ($vendor->status === Vendor::STATUS_UNDER_REVIEW) {
+                $vendor->transitionTo(Vendor::STATUS_APPROVED, $actor, $note);
+                $vendor->refresh();
+            }
 
-        if ($vendor->status === Vendor::STATUS_APPROVED) {
-            $this->assertReadyForActivation($vendor);
-            $vendor->transitionTo(Vendor::STATUS_ACTIVE, $actor, $note);
+            if ($vendor->status === Vendor::STATUS_APPROVED) {
+                $this->assertReadyForActivation($vendor);
+                $vendor->transitionTo(Vendor::STATUS_ACTIVE, $actor, $note);
 
-            return;
-        }
+                return;
+            }
 
-        throw new InvalidArgumentException("Vendor cannot be approved from {$vendor->status} state.");
+            throw new InvalidArgumentException("Vendor cannot be approved from {$vendor->status} state.");
+        });
     }
 
     /**

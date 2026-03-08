@@ -40,6 +40,18 @@ class Vendor extends Model
         'internal_notes',
     ];
 
+    /**
+     * Sensitive state fields excluded from mass assignment.
+     * Use dedicated methods to modify these.
+     */
+    protected $hidden = [
+        'tax_id',
+        'pan_number',
+        'bank_account_number',
+        'bank_ifsc',
+        'internal_notes',
+    ];
+
     protected $casts = [
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
@@ -87,7 +99,7 @@ class Vendor extends Model
         self::STATUS_DRAFT => [self::STATUS_SUBMITTED],
         self::STATUS_SUBMITTED => [self::STATUS_UNDER_REVIEW, self::STATUS_DRAFT, self::STATUS_REJECTED],
         self::STATUS_UNDER_REVIEW => [self::STATUS_APPROVED, self::STATUS_SUBMITTED, self::STATUS_REJECTED],
-        self::STATUS_APPROVED => [self::STATUS_ACTIVE, self::STATUS_SUSPENDED],
+        self::STATUS_APPROVED => [self::STATUS_ACTIVE],
         self::STATUS_ACTIVE => [self::STATUS_SUSPENDED, self::STATUS_TERMINATED],
         self::STATUS_SUSPENDED => [self::STATUS_ACTIVE, self::STATUS_TERMINATED],
         self::STATUS_TERMINATED => [], // Terminal state
@@ -243,7 +255,11 @@ class Vendor extends Model
 
     public function canRequestPayment(): bool
     {
-        return $this->isActive() && $this->isCompliant();
+        $allowedStatuses = [self::STATUS_ACTIVE, self::STATUS_APPROVED];
+        $allowedCompliance = [self::COMPLIANCE_COMPLIANT, self::COMPLIANCE_PENDING];
+
+        return in_array($this->status, $allowedStatuses, true)
+            && in_array($this->compliance_status, $allowedCompliance, true);
     }
 
     public function getStatusBadgeClass(): string

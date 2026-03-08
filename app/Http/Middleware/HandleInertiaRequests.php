@@ -144,7 +144,6 @@ class HandleInertiaRequests extends Middleware
      */
     public static function clearAuthCache($userId): void
     {
-        Cache::forget("user_{$userId}_auth_data");
         Cache::forget("user_{$userId}_auth_data_v2");
     }
 }

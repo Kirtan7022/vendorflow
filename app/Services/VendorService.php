@@ -53,7 +53,7 @@ class VendorService
 
         $application->update([
             'data' => $currentData,
-            'current_step' => max($application->current_step, 2)
+            'current_step' => max($application->current_step, 2),
         ]);
 
         return $application;
@@ -72,7 +72,7 @@ class VendorService
 
         $application->update([
             'data' => $currentData,
-            'current_step' => max($application->current_step, 3)
+            'current_step' => max($application->current_step, 3),
         ]);
 
         return $application;
@@ -87,7 +87,7 @@ class VendorService
         $application = $this->getDraftApplication($user);
 
         // Store files in application-specific folder
-        $tempFolder = 'vendor-applications/' . $application->id . '/temp';
+        $tempFolder = 'vendor-applications/'.$application->id.'/temp';
         $processedDocuments = [];
 
         $currentData = $application->data ?? [];
@@ -95,6 +95,7 @@ class VendorService
         // Check for existing documents in draft
         $existingDocuments = array_map(function ($doc) {
             $doc['document_type_id'] = (int) ($doc['document_type_id'] ?? 0);
+
             return $doc;
         }, $currentData['step3']['documents'] ?? []);
 
@@ -106,7 +107,7 @@ class VendorService
 
             $processedDocuments[] = [
                 'document_type_id' => $documentTypeId,
-                'file_name' => $file->getClientOriginalName(),
+                'file_name' => $this->sanitizeFileName($file->getClientOriginalName()),
                 'file_path' => $path,
                 'file_size' => $file->getSize(),
                 'mime_type' => $file->getMimeType(),
@@ -166,7 +167,7 @@ class VendorService
                 $data['step2'] ?? []
             );
 
-            // If vendor doesn't exist, create as DRAFT first. 
+            // If vendor doesn't exist, create as DRAFT first.
             // If exists, keep current status (should be DRAFT or REJECTED) to allow transition.
             $vendor = $this->vendorRepository->updateOrCreate(
                 ['user_id' => $user->id],
@@ -174,7 +175,7 @@ class VendorService
             );
 
             // Ensure we are in a valid state to transition (e.g. if new, set to DRAFT)
-            if (!$vendor->exists || !$vendor->status) {
+            if (! $vendor->exists || ! $vendor->status) {
                 $vendor->status = Vendor::STATUS_DRAFT;
                 $vendor->save();
             }
@@ -189,17 +190,17 @@ class VendorService
             $vendor->documents()->where('is_current', true)->update(['is_current' => false]);
 
             // 3. Move files and create records
-            if (!empty($data['step3']['documents'])) {
+            if (! empty($data['step3']['documents'])) {
                 foreach ($data['step3']['documents'] as $doc) {
                     $documentTypeId = (int) ($doc['document_type_id'] ?? 0);
                     $tempPath = $doc['file_path'];
-                    $newPath = 'vendor-documents/' . $vendor->id . '/' . basename($tempPath);
+                    $newPath = 'vendor-documents/'.$vendor->id.'/'.basename($tempPath);
 
                     if (Storage::disk('private')->exists($tempPath)) {
                         Storage::disk('private')->move($tempPath, $newPath);
                     } else {
                         // If file not found in temp, check if it's already in final path (re-submission case)
-                        if (!Storage::disk('private')->exists($newPath)) {
+                        if (! Storage::disk('private')->exists($newPath)) {
                             // CRITICAL: Fail the transaction if a document is missing
                             throw new \Exception("Document upload failed: File '{$doc['file_name']}' not found. Please re-upload.");
                         }
@@ -242,7 +243,7 @@ class VendorService
             // Cleanup: Mark application as submitted
             $application->update(['status' => 'submitted']);
 
-            $tempFolder = 'vendor-applications/' . $application->id;
+            $tempFolder = 'vendor-applications/'.$application->id;
             Storage::disk('private')->deleteDirectory($tempFolder);
 
             // Notify Ops Managers
@@ -262,7 +263,7 @@ class VendorService
      */
     public function uploadDocument(Vendor $vendor, UploadedFile $file, int $documentTypeId, ?string $expiryDate)
     {
-        $path = $file->store('vendor-documents/' . $vendor->id, 'private');
+        $path = $file->store('vendor-documents/'.$vendor->id, 'private');
         $hash = hash_file('sha256', $file->getRealPath());
         $actorId = Auth::id() ?? $vendor->user_id;
 
@@ -281,7 +282,7 @@ class VendorService
 
         $document = $this->vendorRepository->createDocument($vendor, [
             'document_type_id' => $documentTypeId,
-            'file_name' => $file->getClientOriginalName(),
+            'file_name' => $this->sanitizeFileName($file->getClientOriginalName()),
             'file_path' => $path,
             'file_hash' => $hash,
             'file_size' => $file->getSize(),
@@ -319,5 +320,20 @@ class VendorService
         }
 
         return $vendor;
+    }
+
+    protected function sanitizeFileName(string $fileName): string
+    {
+        $name = pathinfo($fileName, PATHINFO_FILENAME);
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        $name = preg_replace('/[^\w\-. ]/', '_', $name);
+        $name = substr($name, 0, 200);
+
+        $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
+        if ($extension && ! in_array(strtolower($extension), $allowedExtensions, true)) {
+            $extension = 'bin';
+        }
+
+        return $extension ? "{$name}.{$extension}" : $name;
     }
 }

@@ -116,8 +116,8 @@ class SecurityHardeningTest extends TestCase
 
         $previewResponse->assertOk();
         $previewResponse->assertHeader('X-Frame-Options', 'SAMEORIGIN');
-        $this->assertNull($previewResponse->headers->get('Content-Security-Policy'));
+        $previewResponse->assertHeader('Content-Security-Policy');
         $this->assertNull($previewResponse->headers->get('Cross-Origin-Opener-Policy'));
-        $this->assertNull($previewResponse->headers->get('Cross-Origin-Resource-Policy'));
+        $previewResponse->assertHeader('Cross-Origin-Resource-Policy', 'same-origin');
     }
 }

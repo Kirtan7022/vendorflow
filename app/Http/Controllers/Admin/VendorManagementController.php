@@ -37,17 +37,18 @@ class VendorManagementController extends Controller
         }
 
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('company_name', 'like', "%{$search}%")
-                    ->orWhere('contact_person', 'like', "%{$search}%")
-                    ->orWhere('contact_email', 'like', "%{$search}%");
+            $escapedSearch = str_replace(['%', '_'], ['\\%', '\\_'], $search);
+            $query->where(function ($q) use ($escapedSearch) {
+                $q->where('company_name', 'like', "%{$escapedSearch}%")
+                    ->orWhere('contact_person', 'like', "%{$escapedSearch}%")
+                    ->orWhere('contact_email', 'like', "%{$escapedSearch}%");
             });
         }
 
         $vendors = $query->paginate(15);
 
         return Inertia::render('Admin/Vendors/Index', [
-            'vendors' => $vendors->items(),
+            'vendors' => $vendors,
             'currentStatus' => $status,
             'search' => $search,
         ]);

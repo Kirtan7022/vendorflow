@@ -43,7 +43,7 @@ export default function ComplianceReport({ vendors, stats, filters }) {
         };
         return (
             <Badge variant={variants[status] || 'default'}>
-                {(status || 'pending').replace('_', ' ')}
+                {(status || 'pending').replaceAll('_', ' ')}
             </Badge>
         );
     };

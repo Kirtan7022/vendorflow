@@ -103,7 +103,7 @@ export default function VendorsIndex({ vendors = [], currentStatus = 'all', sear
                                     : 'text-(--color-text-tertiary) hover:text-(--color-text-primary) hover:bg-(--color-bg-primary)'
                             }`}
                         >
-                            {status.replace('_', ' ')}
+                            {status.replaceAll('_', ' ')}
                         </Link>
                     ))}
                 </div>

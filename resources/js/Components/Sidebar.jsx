@@ -77,14 +77,14 @@ function IconRenderer({ icon, size = 'h-5 w-5' }) {
 // =====================================
 // USER MENU DROPDOWN COMPONENT
 // =====================================
-function UserMenu({ user, roleDisplay, onLogout }) {
+function UserMenu({ user, roleDisplay, onLogout, variant }) {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef(null);
 
+    const isVendor = variant === 'vendor';
     const menuItems = [
-        { name: 'Profile', icon: 'profile', href: '/profile' },
-        { name: 'Notifications', icon: 'notifications', href: '/notifications' },
-        { name: 'Settings', icon: 'settings', href: '/profile' },
+        { name: 'Profile', icon: 'profile', href: isVendor ? '/vendor/profile' : '/profile' },
+        { name: 'Notifications', icon: 'notifications', href: isVendor ? '/vendor/notifications' : '/notifications' },
     ];
 
     useEffect(() => {
@@ -329,7 +329,7 @@ export default function Sidebar({
 
                 {/* User Section */}
                 <div className="p-3 border-t border-(--color-border-primary)">
-                    <UserMenu user={user} roleDisplay={roleDisplay} onLogout={handleLogout} />
+                    <UserMenu user={user} roleDisplay={roleDisplay} onLogout={handleLogout} variant={variant} />
                 </div>
             </aside>
         </>

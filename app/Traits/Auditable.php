@@ -7,32 +7,41 @@ use App\Models\AuditLog;
 trait Auditable
 {
     /**
+     * Fields to exclude from audit logging (sensitive data).
+     */
+    protected static array $auditExcludeFields = [
+        'tax_id', 'pan_number', 'bank_account_number', 'bank_ifsc', 'password', 'remember_token',
+    ];
+
+    /**
      * Boot the Auditable trait.
      */
     public static function bootAuditable()
     {
         // Log creation
         static::created(function ($model) {
+            $attributes = collect($model->getAttributes())
+                ->except(static::$auditExcludeFields)
+                ->toArray();
+
             AuditLog::log(
                 AuditLog::EVENT_CREATED,
                 $model,
                 null,
-                $model->getAttributes()
+                $attributes
             );
         });
 
         // Log updates
         static::updated(function ($model) {
-            $changes = $model->getChanges();
-            $original = collect($model->getOriginal())->only(array_keys($changes))->toArray();
+            $changes = collect($model->getChanges())
+                ->except(array_merge(static::$auditExcludeFields, ['updated_at']))
+                ->toArray();
 
-            // Don't log if no meaningful changes
-            if (empty($changes)) {
-                return;
-            }
-
-            // Remove timestamps from audit
-            unset($changes['updated_at'], $original['updated_at']);
+            $original = collect($model->getOriginal())
+                ->only(array_keys($changes))
+                ->except(static::$auditExcludeFields)
+                ->toArray();
 
             if (! empty($changes)) {
                 AuditLog::log(

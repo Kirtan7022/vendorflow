@@ -183,7 +183,13 @@ class SystemMasterDataService
     public function syncDefaultStaffUsers(): void
     {
         $roleIds = DB::table('roles')->pluck('id', 'name');
-        $defaultPassword = (string) (env('DEFAULT_STAFF_PASSWORD') ?: 'password');
+        $envPassword = env('DEFAULT_STAFF_PASSWORD');
+
+        if (app()->isProduction() && (! $envPassword || $envPassword === 'password')) {
+            throw new \RuntimeException('DEFAULT_STAFF_PASSWORD must be set to a strong password in production.');
+        }
+
+        $defaultPassword = (string) ($envPassword ?: 'password');
 
         foreach ($this->data('default_staff_users') as $staffUser) {
             $roleId = $roleIds[$staffUser['role']] ?? null;

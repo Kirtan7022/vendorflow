@@ -26,7 +26,7 @@ class UploadDocumentRequest extends FormRequest
     {
         return [
             'document_type_id' => 'required|exists:document_types,id,is_active,1',
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240',
             'expiry_date' => 'nullable|date|after_or_equal:today',
         ];
     }

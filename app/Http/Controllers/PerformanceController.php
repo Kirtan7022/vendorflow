@@ -26,16 +26,9 @@ class PerformanceController extends Controller
         $this->authorize('viewPerformance');
 
         $vendors = Vendor::whereIn('status', [Vendor::STATUS_ACTIVE, Vendor::STATUS_APPROVED])
+            ->select(['id', 'company_name', 'performance_score', 'compliance_status'])
             ->orderBy('performance_score', 'desc')
-            ->get()
-            ->map(function ($vendor) {
-                return [
-                    'id' => $vendor->id,
-                    'company_name' => $vendor->company_name,
-                    'performance_score' => $vendor->performance_score,
-                    'compliance_status' => $vendor->compliance_status,
-                ];
-            });
+            ->get();
 
         $metrics = PerformanceMetric::where('is_active', true)->get();
 

@@ -125,6 +125,7 @@ export default function StepDocuments({ documentTypes, sessionData }) {
         if (uploaded) {
             const url = URL.createObjectURL(uploaded.file);
             window.open(url, '_blank');
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         } else {
             const sessionDoc = sessionDocsByType.get(normalizedTypeId);
             if (sessionDoc) {

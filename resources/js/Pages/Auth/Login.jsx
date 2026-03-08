@@ -141,7 +141,7 @@ export default function Login() {
                                 )}
                             </div>
 
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center">
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -153,12 +153,6 @@ export default function Login() {
                                         Remember me
                                     </span>
                                 </label>
-                                <Link
-                                    href="/forgot-password"
-                                    className="text-sm text-(--color-brand-primary) hover:text-(--color-brand-primary-hover) font-medium"
-                                >
-                                    Forgot password?
-                                </Link>
                             </div>
 
                             <button
@@ -180,6 +174,7 @@ export default function Login() {
                             </Link>
                         </p>
 
+                        {import.meta.env.DEV && (
                         <div className="mt-8 p-4 rounded-lg bg-(--color-bg-primary) border border-(--color-border-primary)">
                             <p className="text-xs font-medium text-(--color-text-tertiary) mb-2">
                                 Demo Accounts
@@ -190,6 +185,7 @@ export default function Login() {
                                 <div>Finance: finance@vendorflow.com / password</div>
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             </div>

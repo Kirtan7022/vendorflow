@@ -23,7 +23,8 @@ class SystemHealthService
         }
 
         if ($search !== '') {
-            $query->where('job_name', 'like', "%{$search}%");
+            $escapedSearch = str_replace(['%', '_'], ['\\%', '\\_'], $search);
+            $query->where('job_name', 'like', "%{$escapedSearch}%");
         }
 
         return [

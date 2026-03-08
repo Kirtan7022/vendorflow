@@ -85,7 +85,7 @@ export function EmptyState({
 }) {
     return (
         <div className="text-center py-12">
-            <span className="text-5xl block mb-4 text-(--color-text-tertiary) inline-flex justify-center w-full">
+            <span className="text-5xl mb-4 text-(--color-text-tertiary) inline-flex justify-center w-full">
                 <AppIcon
                     name={icon}
                     className="h-12 w-12"

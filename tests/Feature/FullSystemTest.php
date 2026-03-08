@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Vendor;
-use App\Models\Role;
 use App\Notifications\VendorApplicationSubmitted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -24,12 +24,12 @@ class FullSystemTest extends TestCase
         \App\Models\Role::create([
             'name' => 'vendor',
             'display_name' => 'Vendor',
-            'description' => 'Vendor Role'
+            'description' => 'Vendor Role',
         ]);
         \App\Models\Role::create([
             'name' => 'ops_manager',
             'display_name' => 'Ops Manager',
-            'description' => 'Operations Manager'
+            'description' => 'Operations Manager',
         ]);
 
         // Seed Document Types
@@ -109,8 +109,8 @@ class FullSystemTest extends TestCase
                 [
                     'document_type_id' => $docTypeId,
                     'file' => $file,
-                ]
-            ]
+                ],
+            ],
         ];
 
         $this->post('/vendor/onboarding/step3', $docData);

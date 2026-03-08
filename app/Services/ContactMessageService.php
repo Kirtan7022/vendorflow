@@ -27,10 +27,11 @@ class ContactMessageService
 
         $search = $request->query('search');
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('subject', 'like', "%{$search}%");
+            $escapedSearch = str_replace(['%', '_'], ['\\%', '\\_'], $search);
+            $query->where(function ($q) use ($escapedSearch) {
+                $q->where('name', 'like', "%{$escapedSearch}%")
+                    ->orWhere('email', 'like', "%{$escapedSearch}%")
+                    ->orWhere('subject', 'like', "%{$escapedSearch}%");
             });
         }
 

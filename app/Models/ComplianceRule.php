@@ -59,7 +59,9 @@ class ComplianceRule extends Model
 
     public function scopeBlocking($query)
     {
-        return $query->where('blocks_payment', true)
-            ->orWhere('blocks_activation', true);
+        return $query->where(function ($q) {
+            $q->where('blocks_payment', true)
+                ->orWhere('blocks_activation', true);
+        });
     }
 }
