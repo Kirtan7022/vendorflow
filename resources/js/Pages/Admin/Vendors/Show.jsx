@@ -10,14 +10,30 @@ import {
     ModalCancelButton,
     ModalPrimaryButton,
     FormTextarea,
+    AppIcon,
 } from '@/Components';
+import { DocumentViewer } from '@/Components/DocumentViewer';
+import { formatDate, formatDateTime } from '@/utils/dateFormatters';
 
-export default function VendorShow({ vendor }) {
+export default function VendorShow({
+    vendor,
+    docVerificationStatus = [],
+    allMandatoryDocsVerified = true,
+}) {
     const { auth } = usePage().props;
     const can = auth?.can || {};
 
     const [activeTab, setActiveTab] = useState('overview');
     const [showActionModal, setShowActionModal] = useState(null);
+
+    // Document viewer state (Feature 2)
+    const [showDocViewer, setShowDocViewer] = useState(false);
+    const [viewerDocument, setViewerDocument] = useState(null);
+
+    // Document rejection modal state (Feature 4 - replaces browser prompt())
+    const [showDocRejectModal, setShowDocRejectModal] = useState(false);
+    const [rejectDocId, setRejectDocId] = useState(null);
+    const [docRejectReason, setDocRejectReason] = useState('');
 
     const actionForm = useForm({ comment: '' });
     const notesForm = useForm({ internal_notes: vendor?.internal_notes || '' });
@@ -44,6 +60,23 @@ export default function VendorShow({ vendor }) {
         });
     };
 
+    // Handle document rejection via modal (Feature 4)
+    const handleDocReject = () => {
+        if (!rejectDocId || !docRejectReason.trim()) return;
+        router.post(
+            `/admin/documents/${rejectDocId}/reject`,
+            { reason: docRejectReason },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowDocRejectModal(false);
+                    setRejectDocId(null);
+                    setDocRejectReason('');
+                },
+            }
+        );
+    };
+
     const saveNotes = (e) => {
         e.preventDefault();
         notesForm.post(`/admin/vendors/${vendor.id}/notes`);
@@ -57,9 +90,11 @@ export default function VendorShow({ vendor }) {
         ...(can.edit_vendor_notes ? [{ id: 'notes', label: 'Internal Notes' }] : []),
     ];
 
+    // Feature 3: Gate approval on mandatory document verification
     const canApprove =
         can.approve_vendors &&
-        (vendor?.status === 'submitted' || vendor?.status === 'under_review');
+        (vendor?.status === 'submitted' || vendor?.status === 'under_review') &&
+        allMandatoryDocsVerified;
     const canReject =
         can.reject_vendors && (vendor?.status === 'submitted' || vendor?.status === 'under_review');
     const canActivate = can.activate_vendors && vendor?.status === 'approved';
@@ -233,86 +268,154 @@ export default function VendorShow({ vendor }) {
 
             {/* Documents Tab */}
             {activeTab === 'documents' && (
-                <Card>
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-(--color-border-secondary)">
-                                <th className="text-left p-4 text-sm font-medium text-(--color-text-secondary)">
-                                    Document
-                                </th>
-                                <th className="text-left p-4 text-sm font-medium text-(--color-text-secondary)">
-                                    Status
-                                </th>
-                                <th className="text-left p-4 text-sm font-medium text-(--color-text-secondary)">
-                                    Expiry
-                                </th>
-                                <th className="text-left p-4 text-sm font-medium text-(--color-text-secondary)">
-                                    Uploaded
-                                </th>
-                                {can.verify_documents && (
+                <div className="space-y-4">
+                    {/* Feature 3: Document verification warning banner */}
+                    {!allMandatoryDocsVerified &&
+                        (vendor?.status === 'submitted' || vendor?.status === 'under_review') && (
+                            <div className="p-4 rounded-xl border border-(--color-warning) bg-(--color-warning-light)/30">
+                                <div className="flex items-center gap-3">
+                                    <AppIcon
+                                        name="warning"
+                                        className="h-5 w-5 text-(--color-warning) shrink-0"
+                                    />
+                                    <div>
+                                        <p className="font-medium text-(--color-text-primary)">
+                                            Mandatory documents not fully verified
+                                        </p>
+                                        <p className="text-sm text-(--color-text-secondary) mt-1">
+                                            All mandatory documents must be verified before
+                                            approving this vendor.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="mt-3 space-y-1 ml-8">
+                                    {docVerificationStatus
+                                        .filter((d) => !d.is_verified)
+                                        .map((d, i) => (
+                                            <div
+                                                key={i}
+                                                className="text-sm flex items-center gap-2"
+                                            >
+                                                <span className="w-2 h-2 rounded-full bg-(--color-danger) shrink-0" />
+                                                <span className="text-(--color-text-secondary)">
+                                                    {d.document_type}:{' '}
+                                                    <Badge status={d.verification_status} />
+                                                </span>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+
+                    <Card>
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-(--color-border-secondary)">
+                                    <th className="text-left p-4 text-sm font-medium text-(--color-text-secondary)">
+                                        Document
+                                    </th>
+                                    <th className="text-left p-4 text-sm font-medium text-(--color-text-secondary)">
+                                        Status
+                                    </th>
+                                    <th className="text-left p-4 text-sm font-medium text-(--color-text-secondary)">
+                                        Expiry
+                                    </th>
+                                    <th className="text-left p-4 text-sm font-medium text-(--color-text-secondary)">
+                                        Uploaded
+                                    </th>
                                     <th className="text-right p-4 text-sm font-medium text-(--color-text-secondary)">
                                         Actions
                                     </th>
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {vendor?.documents?.map((doc) => (
-                                <tr
-                                    key={doc.id}
-                                    className="border-b border-(--color-border-secondary)"
-                                >
-                                    <td className="p-4 text-(--color-text-primary)">
-                                        {doc.document_type?.display_name}
-                                    </td>
-                                    <td className="p-4">
-                                        <Badge status={doc.verification_status} />
-                                    </td>
-                                    <td className="p-4 text-(--color-text-secondary)">
-                                        {doc.expiry_date || '-'}
-                                    </td>
-                                    <td className="p-4 text-(--color-text-secondary)">
-                                        {doc.created_at}
-                                    </td>
-                                    {can.verify_documents && (
-                                        <td className="p-4 text-right">
-                                            {doc.verification_status === 'pending' && (
-                                                <div className="flex gap-2 justify-end">
-                                                    <Button
-                                                        variant="success"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            router.post(
-                                                                `/admin/documents/${doc.id}/verify`
-                                                            )
-                                                        }
-                                                    >
-                                                        Verify
-                                                    </Button>
-                                                    <Button
-                                                        variant="danger"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            const reason =
-                                                                prompt('Rejection reason:');
-                                                            if (reason)
-                                                                router.post(
-                                                                    `/admin/documents/${doc.id}/reject`,
-                                                                    { reason }
-                                                                );
-                                                        }}
-                                                    >
-                                                        Reject
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </td>
-                                    )}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </Card>
+                            </thead>
+                            <tbody>
+                                {vendor?.documents?.map((doc) => (
+                                    <tr
+                                        key={doc.id}
+                                        className="border-b border-(--color-border-secondary)"
+                                    >
+                                        <td className="p-4 text-(--color-text-primary)">
+                                            <div>
+                                                {doc.document_type?.display_name}
+                                                {doc.verification_status === 'rejected' &&
+                                                    doc.verification_notes && (
+                                                        <div className="text-xs text-(--color-danger) mt-0.5">
+                                                            Reason: {doc.verification_notes}
+                                                        </div>
+                                                    )}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <Badge status={doc.verification_status} />
+                                        </td>
+                                        <td className="p-4 text-(--color-text-secondary)">
+                                            {formatDate(doc.expiry_date)}
+                                        </td>
+                                        <td className="p-4 text-(--color-text-secondary)">
+                                            {formatDateTime(doc.created_at)}
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <div className="flex gap-2 justify-end">
+                                                {/* Feature 2: View/Download buttons */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setViewerDocument({
+                                                            ...doc,
+                                                            preview_url: `/admin/documents/${doc.id}/preview`,
+                                                            download_url: `/documents/${doc.id}/download`,
+                                                        });
+                                                        setShowDocViewer(true);
+                                                    }}
+                                                    className="px-3 py-1.5 text-sm font-medium text-(--color-brand-primary) hover:text-(--color-brand-primary-hover) hover:bg-(--color-brand-primary-light) rounded-lg transition-colors"
+                                                >
+                                                    View
+                                                </button>
+                                                <a
+                                                    href={`/documents/${doc.id}/download`}
+                                                    className="px-3 py-1.5 text-sm font-medium text-(--color-text-tertiary) hover:text-(--color-text-primary) hover:bg-(--color-bg-hover) rounded-lg transition-colors"
+                                                >
+                                                    Download
+                                                </a>
+                                                {/* Verify/Reject buttons for pending documents */}
+                                                {can.verify_documents &&
+                                                    doc.verification_status === 'pending' && (
+                                                        <>
+                                                            <Button
+                                                                variant="success"
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    router.post(
+                                                                        `/admin/documents/${doc.id}/verify`,
+                                                                        {},
+                                                                        { preserveScroll: true }
+                                                                    )
+                                                                }
+                                                            >
+                                                                Verify
+                                                            </Button>
+                                                            {/* Feature 4: Modal-based rejection */}
+                                                            <Button
+                                                                variant="danger"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setRejectDocId(doc.id);
+                                                                    setDocRejectReason('');
+                                                                    setShowDocRejectModal(true);
+                                                                }}
+                                                            >
+                                                                Reject
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </Card>
+                </div>
             )}
 
             {/* Compliance Tab */}
@@ -378,7 +481,7 @@ export default function VendorShow({ vendor }) {
                                         </span>
                                     </div>
                                     <div className="text-xs text-(--color-text-tertiary)">
-                                        by {log.user?.name} - {log.created_at}
+                                        by {log.user?.name} - {formatDateTime(log.created_at)}
                                     </div>
                                     {log.comment && (
                                         <div className="text-sm text-(--color-text-secondary) mt-2">
@@ -418,7 +521,34 @@ export default function VendorShow({ vendor }) {
                 </Card>
             )}
 
-            {/* Action Modal */}
+            {/* Feature 4: Document Rejection Modal (replaces browser prompt) */}
+            <Modal
+                isOpen={showDocRejectModal}
+                onClose={() => setShowDocRejectModal(false)}
+                title="Reject Document"
+                footer={
+                    <>
+                        <ModalCancelButton onClick={() => setShowDocRejectModal(false)} />
+                        <ModalPrimaryButton
+                            variant="danger"
+                            onClick={handleDocReject}
+                            disabled={!docRejectReason.trim()}
+                        >
+                            Reject Document
+                        </ModalPrimaryButton>
+                    </>
+                }
+            >
+                <FormTextarea
+                    label="Reason for Rejection *"
+                    value={docRejectReason}
+                    onChange={setDocRejectReason}
+                    placeholder="Please provide a reason for rejection..."
+                    required
+                />
+            </Modal>
+
+            {/* Vendor Action Modal */}
             <Modal
                 isOpen={!!showActionModal}
                 onClose={() => setShowActionModal(null)}
@@ -450,6 +580,17 @@ export default function VendorShow({ vendor }) {
                     required={isCommentRequired}
                 />
             </Modal>
+
+            {/* Feature 2: Document Viewer */}
+            <DocumentViewer
+                key={viewerDocument?.id ?? 'none'}
+                document={viewerDocument}
+                isOpen={showDocViewer}
+                onClose={() => {
+                    setShowDocViewer(false);
+                    setViewerDocument(null);
+                }}
+            />
         </AdminLayout>
     );
 }

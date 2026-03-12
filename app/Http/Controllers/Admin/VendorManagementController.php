@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ComplianceResult;
+use App\Models\DocumentType;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Services\VendorLifecycleService;
@@ -60,7 +61,7 @@ class VendorManagementController extends Controller
         $this->authorize('view', $vendor);
 
         $vendor->load([
-            'documents:id,vendor_id,document_type_id,file_name,verification_status,expiry_date,created_at' => [
+            'documents:id,vendor_id,document_type_id,file_name,verification_status,verification_notes,expiry_date,is_current,created_at' => [
                 'documentType:id,name,display_name',
             ],
             'stateLogs:id,vendor_id,user_id,from_status,to_status,comment,created_at' => [
@@ -90,7 +91,31 @@ class VendorManagementController extends Controller
             ]);
         }
 
-        return Inertia::render('Admin/Vendors/Show', ['vendor' => $vendor]);
+        // Compute mandatory document verification readiness (Feature 3)
+        $mandatoryDocTypes = DocumentType::where('is_mandatory', true)
+            ->where('is_active', true)
+            ->get(['id', 'name', 'display_name']);
+
+        $currentDocs = $vendor->documents->where('is_current', true);
+
+        $docVerificationStatus = $mandatoryDocTypes->map(function ($docType) use ($currentDocs) {
+            $doc = $currentDocs->where('document_type_id', $docType->id)->first();
+
+            return [
+                'document_type' => $docType->display_name,
+                'is_uploaded' => $doc !== null,
+                'verification_status' => $doc?->verification_status ?? 'missing',
+                'is_verified' => $doc?->verification_status === 'verified',
+            ];
+        });
+
+        $allMandatoryDocsVerified = $docVerificationStatus->every(fn ($d) => $d['is_verified']);
+
+        return Inertia::render('Admin/Vendors/Show', [
+            'vendor' => $vendor,
+            'docVerificationStatus' => $docVerificationStatus->values(),
+            'allMandatoryDocsVerified' => $allMandatoryDocsVerified,
+        ]);
     }
 
     public function approve(Request $request, Vendor $vendor): RedirectResponse
@@ -105,9 +130,9 @@ class VendorManagementController extends Controller
         $actor = $request->user();
 
         try {
-            $this->lifecycleService->approveAndActivate($vendor, $actor, $request->string('comment')->toString());
+            $this->lifecycleService->approve($vendor, $actor, $request->string('comment')->toString());
 
-            return back()->with('success', 'Vendor approved and activated!');
+            return back()->with('success', 'Vendor approved! The vendor can be activated once compliance requirements are met.');
         } catch (\Throwable $e) {
             Log::error('Vendor approval failed', ['vendor_id' => $vendor->id, 'error' => $e->getMessage()]);
 
@@ -211,9 +236,8 @@ class VendorManagementController extends Controller
             'internal_notes' => 'nullable|string|max:5000',
         ]);
 
-        $vendor->update([
-            'internal_notes' => $validated['internal_notes'] ?? null,
-        ]);
+        $vendor->internal_notes = $validated['internal_notes'] ?? null;
+        $vendor->save();
 
         return back()->with('success', 'Notes saved.');
     }

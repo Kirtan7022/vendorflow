@@ -37,7 +37,6 @@ class Vendor extends Model
         'compliance_status',
         'compliance_score',
         'performance_score',
-        'internal_notes',
     ];
 
     /**

@@ -90,7 +90,7 @@ class VendorOnboardingTest extends TestCase
             ->post(route('vendor.onboarding.step2'), [
                 'bank_name' => 'Test Bank',
                 'bank_account_number' => '1234567890',
-                'bank_ifsc' => 'TEST0001',
+                'bank_ifsc' => 'TEST0123456',
             ]);
 
         $response->assertRedirect(route('vendor.onboarding', ['step' => 3]));
@@ -157,7 +157,7 @@ class VendorOnboardingTest extends TestCase
                 'step2' => [
                     'bank_name' => 'Test Bank',
                     'bank_account_number' => '1234567890',
-                    'bank_ifsc' => 'TEST0001',
+                    'bank_ifsc' => 'TEST0123456',
                 ],
                 // Step 3 will be set up with a real temp file
             ],

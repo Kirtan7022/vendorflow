@@ -90,14 +90,15 @@ class VendorManagementTest extends TestCase
 
         $response->assertRedirect(); // Back
 
+        // Approve now transitions to approved state (activation is a separate step)
         $this->assertDatabaseHas('vendors', [
             'id' => $this->vendor->id,
-            'status' => Vendor::STATUS_ACTIVE,
+            'status' => Vendor::STATUS_APPROVED,
         ]);
 
         $this->assertDatabaseHas('vendor_state_logs', [
             'vendor_id' => $this->vendor->id,
-            'to_status' => Vendor::STATUS_ACTIVE,
+            'to_status' => Vendor::STATUS_APPROVED,
             'comment' => 'Approved for testing',
         ]);
     }
@@ -117,17 +118,43 @@ class VendorManagementTest extends TestCase
         ]);
     }
 
-    public function test_admin_cannot_activate_vendor_when_compliance_threshold_not_met()
+    public function test_admin_can_activate_approved_vendor()
     {
         $this->vendor->update([
             'status' => Vendor::STATUS_APPROVED,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.vendors.activate', $this->vendor), [
+                'comment' => 'Activating vendor',
+            ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('vendors', [
+            'id' => $this->vendor->id,
+            'status' => Vendor::STATUS_ACTIVE,
+        ]);
+
+        $this->assertDatabaseHas('vendor_state_logs', [
+            'vendor_id' => $this->vendor->id,
+            'from_status' => Vendor::STATUS_APPROVED,
+            'to_status' => Vendor::STATUS_ACTIVE,
+            'comment' => 'Activating vendor',
+        ]);
+    }
+
+    public function test_admin_cannot_reactivate_suspended_vendor_without_compliance()
+    {
+        $this->vendor->update([
+            'status' => Vendor::STATUS_SUSPENDED,
             'compliance_status' => Vendor::COMPLIANCE_AT_RISK,
             'compliance_score' => 60,
         ]);
 
         $response = $this->actingAs($this->adminUser)
             ->post(route('admin.vendors.activate', $this->vendor), [
-                'comment' => 'Trying activation',
+                'comment' => 'Trying reactivation',
             ]);
 
         $response->assertRedirect();
@@ -135,7 +162,7 @@ class VendorManagementTest extends TestCase
 
         $this->assertDatabaseHas('vendors', [
             'id' => $this->vendor->id,
-            'status' => Vendor::STATUS_APPROVED,
+            'status' => Vendor::STATUS_SUSPENDED,
         ]);
     }
 

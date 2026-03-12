@@ -50,9 +50,12 @@ export default function StepBank({ vendor, sessionData }) {
                         <input
                             type="text"
                             value={data.bank_account_number}
-                            onChange={(e) => setData('bank_account_number', e.target.value)}
+                            onChange={(e) => setData('bank_account_number', e.target.value.replace(/\D/g, ''))}
                             className="w-full px-4 py-3 bg-(--color-bg-primary) border border-(--color-border-primary) rounded-lg text-sm focus:border-(--color-border-focus) focus:ring-2 focus:ring-(--color-brand-primary)/20 outline-none transition-all"
                             placeholder="Account Number"
+                            maxLength={18}
+                            pattern="[0-9]{9,18}"
+                            title="9 to 18 digits"
                         />
                         {errors.bank_account_number && (
                             <p className="text-sm text-(--color-danger)">
@@ -71,6 +74,9 @@ export default function StepBank({ vendor, sessionData }) {
                             onChange={(e) => setData('bank_ifsc', e.target.value.toUpperCase())}
                             className="w-full px-4 py-3 bg-(--color-bg-primary) border border-(--color-border-primary) rounded-lg text-sm focus:border-(--color-border-focus) focus:ring-2 focus:ring-(--color-brand-primary)/20 outline-none transition-all uppercase"
                             placeholder="SBIN0001234"
+                            maxLength={11}
+                            pattern="[A-Z]{4}0[A-Z0-9]{6}"
+                            title="4 letters, 0, 6 alphanumeric (e.g. SBIN0001234)"
                         />
                         {errors.bank_ifsc && (
                             <p className="text-sm text-(--color-danger)">{errors.bank_ifsc}</p>

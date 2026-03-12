@@ -8,6 +8,7 @@ import {
     EmptyState,
     AppIcon,
 } from '@/Components';
+import { formatDateTime } from '@/utils/dateFormatters';
 
 export default function NotificationsIndex({ notifications, unreadCount }) {
     const { auth } = usePage().props;
@@ -99,15 +100,7 @@ export default function NotificationsIndex({ notifications, unreadCount }) {
                                                 {notification.data?.message}
                                             </p>
                                             <div className="text-xs text-(--color-text-tertiary)">
-                                                {new Date(
-                                                    notification.created_at
-                                                ).toLocaleDateString('en-IN', {
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
+                                                {formatDateTime(notification.created_at)}
                                             </div>
                                         </div>
                                     </div>

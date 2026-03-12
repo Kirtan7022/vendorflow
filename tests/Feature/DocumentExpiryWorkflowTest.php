@@ -98,7 +98,7 @@ class DocumentExpiryWorkflowTest extends TestCase
                 'step2' => [
                     'bank_name' => 'Expiry Bank',
                     'bank_account_number' => '1234567890',
-                    'bank_ifsc' => 'TEST0001',
+                    'bank_ifsc' => 'TEST0123456',
                 ],
             ],
         ]);

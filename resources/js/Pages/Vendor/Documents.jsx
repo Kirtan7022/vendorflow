@@ -1,7 +1,8 @@
 import { useForm } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
-import { VendorLayout, PageHeader, Card, Badge, Button, FormSelect, AppIcon } from '@/Components';
+import { VendorLayout, PageHeader, Card, Badge, Button, FormSelect, AppIcon, Modal, ModalCancelButton, ModalPrimaryButton } from '@/Components';
 import { DocumentViewer } from '@/Components/DocumentViewer';
+import { formatDate, formatDateTime } from '@/utils/dateFormatters';
 
 export default function Documents({ vendor, documents = [], documentTypes = [] }) {
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -24,23 +25,6 @@ export default function Documents({ vendor, documents = [], documentTypes = [] }
     );
 
     const requiresExpiryDate = Boolean(selectedDocumentType?.has_expiry);
-
-    const formatDate = (value) => {
-        if (!value) {
-            return '-';
-        }
-
-        const date = new Date(`${value}T00:00:00`);
-        if (Number.isNaN(date.getTime())) {
-            return value;
-        }
-
-        return date.toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        });
-    };
 
     const getExpiryMeta = (doc) => {
         if (!doc?.expiry_date) {
@@ -106,6 +90,7 @@ export default function Documents({ vendor, documents = [], documentTypes = [] }
         total: displayDocuments.length,
         verified: displayDocuments.filter((doc) => doc.verification_status === 'verified').length,
         pending: displayDocuments.filter((doc) => doc.verification_status === 'pending').length,
+        rejected: displayDocuments.filter((doc) => doc.verification_status === 'rejected').length,
         expired: displayDocuments.filter(
             (doc) =>
                 doc.verification_status === 'expired' || getExpiryMeta(doc).badgeStatus === 'error'
@@ -141,7 +126,7 @@ export default function Documents({ vendor, documents = [], documentTypes = [] }
     return (
         <VendorLayout title="Documents" activeNav="Documents" header={header} vendor={vendor}>
             <div className="space-y-8">
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                     <div className="bg-(--color-bg-primary) border border-(--color-border-primary) rounded-xl p-4 text-center shadow-token-sm">
                         <div className="text-3xl mb-2 inline-flex justify-center w-full">
                             <AppIcon name="documents" className="h-8 w-8" />
@@ -168,6 +153,15 @@ export default function Documents({ vendor, documents = [], documentTypes = [] }
                             {stats.pending}
                         </div>
                         <div className="text-sm text-(--color-text-tertiary)">Pending</div>
+                    </div>
+                    <div className="bg-(--color-bg-primary) border border-(--color-border-primary) rounded-xl p-4 text-center shadow-token-sm">
+                        <div className="text-3xl mb-2 inline-flex justify-center w-full">
+                            <AppIcon name="x-mark" className="h-8 w-8 text-(--color-danger)" />
+                        </div>
+                        <div className="text-2xl font-bold text-(--color-danger)">
+                            {stats.rejected}
+                        </div>
+                        <div className="text-sm text-(--color-text-tertiary)">Rejected</div>
                     </div>
                     <div className="bg-(--color-bg-primary) border border-(--color-border-primary) rounded-xl p-4 text-center shadow-token-sm">
                         <div className="text-3xl mb-2 inline-flex justify-center w-full">
@@ -212,22 +206,19 @@ export default function Documents({ vendor, documents = [], documentTypes = [] }
                                                 </div>
                                                 <div className="text-xs text-(--color-text-muted) mt-0.5">
                                                     Uploaded:{' '}
-                                                    {new Date(doc.created_at).toLocaleString(
-                                                        'en-IN',
-                                                        {
-                                                            day: '2-digit',
-                                                            month: 'short',
-                                                            year: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        }
-                                                    )}
+                                                    {formatDateTime(doc.created_at)}
                                                 </div>
                                                 <div
                                                     className={`text-xs mt-0.5 ${getExpiryMeta(doc).toneClass}`}
                                                 >
                                                     {getExpiryMeta(doc).text}
                                                 </div>
+                                                {doc.verification_status === 'rejected' &&
+                                                    doc.verification_notes && (
+                                                        <div className="text-xs text-(--color-danger) mt-1">
+                                                            Rejection reason: {doc.verification_notes}
+                                                        </div>
+                                                    )}
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2 md:justify-end">
@@ -252,6 +243,21 @@ export default function Documents({ vendor, documents = [], documentTypes = [] }
                                                 Download
                                             </a>
                                             <Badge status={doc.verification_status} />
+                                            {doc.verification_status === 'rejected' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        uploadForm.setData(
+                                                            'document_type_id',
+                                                            String(doc.document_type_id)
+                                                        );
+                                                        setShowUploadModal(true);
+                                                    }}
+                                                    className="px-3 py-1.5 text-sm font-medium text-(--color-warning) hover:text-(--color-warning-dark) hover:bg-(--color-warning-light) rounded-lg transition-colors"
+                                                >
+                                                    Re-upload
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -261,112 +267,93 @@ export default function Documents({ vendor, documents = [], documentTypes = [] }
                 </Card>
             </div>
 
-            {showUploadModal && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 p-4 backdrop-blur-sm sm:items-center sm:p-6">
-                    <div className="w-full max-w-md rounded-2xl border border-(--color-border-primary) bg-(--color-bg-primary) p-6 shadow-token-xl max-h-[92vh] overflow-y-auto">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-(--color-text-primary)">
-                                Upload Document
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={closeUploadModal}
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-(--color-text-tertiary) transition-colors hover:bg-(--color-bg-hover) hover:text-(--color-text-primary)"
-                                aria-label="Close upload dialog"
-                            >
-                                <AppIcon name="x-mark" className="h-4 w-4" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleUpload}>
-                            <div className="space-y-4">
-                                <FormSelect
-                                    label="Document Type"
-                                    value={uploadForm.data.document_type_id}
-                                    onChange={(val) => uploadForm.setData('document_type_id', val)}
-                                    options={documentTypes.map((type) => ({
-                                        value: type.id,
-                                        label: type.display_name,
-                                    }))}
-                                    placeholder="Select document type"
-                                    required
-                                />
-                                {uploadForm.errors.document_type_id && (
-                                    <p className="text-sm text-(--color-danger)">
-                                        {uploadForm.errors.document_type_id}
-                                    </p>
-                                )}
+            <Modal
+                isOpen={showUploadModal}
+                onClose={closeUploadModal}
+                title="Upload Document"
+                footer={
+                    <>
+                        <ModalCancelButton onClick={closeUploadModal} />
+                        <ModalPrimaryButton onClick={handleUpload} disabled={isUploadDisabled}>
+                            {uploadForm.processing ? 'Uploading...' : 'Upload'}
+                        </ModalPrimaryButton>
+                    </>
+                }
+            >
+                <div className="space-y-4">
+                    <FormSelect
+                        label="Document Type"
+                        value={uploadForm.data.document_type_id}
+                        onChange={(val) => uploadForm.setData('document_type_id', val)}
+                        options={documentTypes.map((type) => ({
+                            value: type.id,
+                            label: type.display_name,
+                        }))}
+                        placeholder="Select document type"
+                        required
+                    />
+                    {uploadForm.errors.document_type_id && (
+                        <p className="text-sm text-(--color-danger)">
+                            {uploadForm.errors.document_type_id}
+                        </p>
+                    )}
 
-                                <div>
-                                    <label className="text-sm font-medium text-(--color-text-secondary) mb-2 block">
-                                        Expiry Date {requiresExpiryDate ? '' : '(Optional)'}
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={uploadForm.data.expiry_date}
-                                        min={new Date().toISOString().split('T')[0]}
-                                        onChange={(event) =>
-                                            uploadForm.setData('expiry_date', event.target.value)
-                                        }
-                                        className="w-full bg-(--color-bg-primary) border-2 border-(--color-border-primary) rounded-xl px-4 py-3 text-(--color-text-primary) focus:outline-none focus:border-(--color-brand-primary)"
-                                        required={requiresExpiryDate}
-                                    />
-                                    <p className="text-xs text-(--color-text-muted) mt-1">
-                                        {requiresExpiryDate
-                                            ? 'This document type requires a valid expiry date.'
-                                            : 'Set expiry date if this document has a validity period.'}
-                                    </p>
-                                    {uploadForm.errors.expiry_date && (
-                                        <p className="text-sm text-(--color-danger) mt-1">
-                                            {uploadForm.errors.expiry_date}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-medium text-(--color-text-secondary) mb-2 block">
-                                        File
-                                    </label>
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={(e) =>
-                                            uploadForm.setData('file', e.target.files[0])
-                                        }
-                                        className="w-full bg-(--color-bg-primary) border-2 border-(--color-border-primary) rounded-xl px-4 py-3 text-(--color-text-primary) file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-(--color-brand-primary)/10 file:text-(--color-brand-primary) hover:file:bg-(--color-brand-primary)/20 transition-all"
-                                        accept=".pdf,.jpg,.jpeg,.png"
-                                        required
-                                    />
-                                    <p className="text-xs text-(--color-text-muted) mt-1">
-                                        PDF, JPG, PNG up to 10MB
-                                    </p>
-                                    {uploadForm.errors.file && (
-                                        <p className="text-sm text-(--color-danger) mt-1">
-                                            {uploadForm.errors.file}
-                                        </p>
-                                    )}
-                                </div>
-                                {uploadForm.errors.upload && (
-                                    <p className="text-sm text-(--color-danger)">
-                                        {uploadForm.errors.upload}
-                                    </p>
-                                )}
-                            </div>
-                            <div className="flex justify-end gap-3 mt-6">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={closeUploadModal}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={isUploadDisabled} variant="primary">
-                                    {uploadForm.processing ? 'Uploading...' : 'Upload'}
-                                </Button>
-                            </div>
-                        </form>
+                    <div>
+                        <label className="text-sm font-medium text-(--color-text-secondary) mb-2 block">
+                            Expiry Date {requiresExpiryDate ? '' : '(Optional)'}
+                        </label>
+                        <input
+                            type="date"
+                            value={uploadForm.data.expiry_date}
+                            min={new Date().toISOString().split('T')[0]}
+                            onChange={(event) =>
+                                uploadForm.setData('expiry_date', event.target.value)
+                            }
+                            className="w-full bg-(--color-bg-primary) border-2 border-(--color-border-primary) rounded-xl px-4 py-3 text-(--color-text-primary) focus:outline-none focus:border-(--color-brand-primary)"
+                            required={requiresExpiryDate}
+                        />
+                        <p className="text-xs text-(--color-text-muted) mt-1">
+                            {requiresExpiryDate
+                                ? 'This document type requires a valid expiry date.'
+                                : 'Set expiry date if this document has a validity period.'}
+                        </p>
+                        {uploadForm.errors.expiry_date && (
+                            <p className="text-sm text-(--color-danger) mt-1">
+                                {uploadForm.errors.expiry_date}
+                            </p>
+                        )}
                     </div>
+
+                    <div>
+                        <label className="text-sm font-medium text-(--color-text-secondary) mb-2 block">
+                            File
+                        </label>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={(e) =>
+                                uploadForm.setData('file', e.target.files[0])
+                            }
+                            className="w-full bg-(--color-bg-primary) border-2 border-(--color-border-primary) rounded-xl px-4 py-3 text-(--color-text-primary) file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-(--color-brand-primary)/10 file:text-(--color-brand-primary) hover:file:bg-(--color-brand-primary)/20 transition-all"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            required
+                        />
+                        <p className="text-xs text-(--color-text-muted) mt-1">
+                            PDF, JPG, PNG up to 10MB
+                        </p>
+                        {uploadForm.errors.file && (
+                            <p className="text-sm text-(--color-danger) mt-1">
+                                {uploadForm.errors.file}
+                            </p>
+                        )}
+                    </div>
+                    {uploadForm.errors.upload && (
+                        <p className="text-sm text-(--color-danger)">
+                            {uploadForm.errors.upload}
+                        </p>
+                    )}
                 </div>
-            )}
+            </Modal>
 
             <DocumentViewer
                 key={selectedDocument?.id ?? 'none'}

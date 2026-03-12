@@ -1,5 +1,15 @@
 import { useForm, router } from '@inertiajs/react';
-import { AdminLayout, Badge, PageHeader, Button } from '@/Components';
+import { useState } from 'react';
+import {
+    AdminLayout,
+    Badge,
+    PageHeader,
+    Button,
+    Modal,
+    ModalCancelButton,
+    ModalPrimaryButton,
+} from '@/Components';
+import { formatDateTime } from '@/utils/dateFormatters';
 
 export default function Show({ message }) {
     const { data, setData, put, processing } = useForm({
@@ -7,24 +17,24 @@ export default function Show({ message }) {
         admin_notes: message.admin_notes || '',
     });
 
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
     const handleUpdate = (e) => {
         e.preventDefault();
         put(`/admin/contact-messages/${message.id}`);
     };
 
     const handleDelete = () => {
-        if (confirm('Are you sure you want to delete this message?')) {
-            router.delete(`/admin/contact-messages/${message.id}`);
-        }
+        router.delete(`/admin/contact-messages/${message.id}`);
     };
 
     const header = (
         <PageHeader
             title="Message Details"
-            subtitle={`From ${message.name} - ${new Date(message.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
-            backUrl="/admin/contact-messages"
+            subtitle={`From ${message.name} - ${formatDateTime(message.created_at)}`}
+            backLink="/admin/contact-messages"
             actions={
-                <Button variant="danger" onClick={handleDelete}>
+                <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
                     Delete
                 </Button>
             }
@@ -151,13 +161,7 @@ export default function Show({ message }) {
                                     Received
                                 </label>
                                 <p className="text-(--color-text-primary) mt-1">
-                                    {new Date(message.created_at).toLocaleDateString('en-IN', {
-                                        day: '2-digit',
-                                        month: 'long',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}
+                                    {formatDateTime(message.created_at)}
                                 </p>
                             </div>
                         </div>
@@ -197,6 +201,24 @@ export default function Show({ message }) {
                     </div>
                 </div>
             </div>
+
+            <Modal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="Delete Message"
+                footer={
+                    <>
+                        <ModalCancelButton onClick={() => setShowDeleteModal(false)} />
+                        <ModalPrimaryButton variant="danger" onClick={handleDelete}>
+                            Delete
+                        </ModalPrimaryButton>
+                    </>
+                }
+            >
+                <p className="text-sm text-(--color-text-secondary)">
+                    Are you sure you want to delete this message? This action cannot be undone.
+                </p>
+            </Modal>
         </AdminLayout>
     );
 }

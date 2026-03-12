@@ -1,4 +1,5 @@
 import { AppIcon, Card, PageHeader, VendorLayout } from '@/Components';
+import { formatDate } from '@/utils/dateFormatters';
 
 export default function Performance({ vendor, performanceScores = [], metrics = [] }) {
     const overallScore = Number(vendor?.performance_score || 0);
@@ -173,7 +174,7 @@ export default function Performance({ vendor, performanceScores = [], metrics = 
                                                 </div>
                                                 <div className="text-sm text-(--color-text-tertiary)">
                                                     {score.period_start && score.period_end
-                                                        ? `${new Date(score.period_start).toLocaleDateString()} - ${new Date(score.period_end).toLocaleDateString()}`
+                                                        ? `${formatDate(score.period_start)} - ${formatDate(score.period_end)}`
                                                         : 'Recent evaluation'}
                                                 </div>
                                             </div>

@@ -11,6 +11,7 @@ import {
     FormInput,
     FormSelect,
 } from '@/Components';
+import { formatDate } from '@/utils/dateFormatters';
 
 export default function PaymentReport({ payments, stats, filters }) {
     const { auth } = usePage().props;
@@ -70,7 +71,7 @@ export default function PaymentReport({ payments, stats, filters }) {
         {
             key: 'created_at',
             label: 'Requested',
-            render: (row) => new Date(row.created_at).toLocaleDateString(),
+            render: (row) => formatDate(row.created_at),
         },
     ];
 

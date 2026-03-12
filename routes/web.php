@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReportController;
@@ -146,6 +147,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/vendors/{vendor}/notes', [VendorManagementController::class, 'notes'])
             ->middleware('throttle:sensitive-action')
             ->name('vendors.notes');
+
+        // Admin notification sending
+        Route::get('/notifications/send', [AdminNotificationController::class, 'index'])->name('notifications.send');
+        Route::post('/notifications/send', [AdminNotificationController::class, 'send'])
+            ->middleware('throttle:sensitive-action')
+            ->name('notifications.store');
 
         // Contact messages
         Route::resource('contact-messages', \App\Http\Controllers\ContactController::class)->only(['index', 'show', 'update', 'destroy'])->names('contact-messages');

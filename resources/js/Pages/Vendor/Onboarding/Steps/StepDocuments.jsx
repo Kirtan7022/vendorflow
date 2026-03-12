@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
+import { formatDate } from '@/utils/dateFormatters';
 
 export default function StepDocuments({ documentTypes, sessionData }) {
     const [uploadedDocs, setUploadedDocs] = useState([]);
@@ -64,23 +65,6 @@ export default function StepDocuments({ documentTypes, sessionData }) {
             const next = { ...prev };
             delete next[normalizedTypeId];
             return next;
-        });
-    };
-
-    const formatExpiryDate = (value) => {
-        if (!value) {
-            return '-';
-        }
-
-        const date = new Date(`${value}T00:00:00`);
-        if (Number.isNaN(date.getTime())) {
-            return value;
-        }
-
-        return date.toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
         });
     };
 
@@ -234,7 +218,7 @@ export default function StepDocuments({ documentTypes, sessionData }) {
                                                 {sessionDoc?.expiry_date && !canEditExpiry && (
                                                     <p className="mt-1 text-xs text-(--color-text-tertiary)">
                                                         Current expiry:{' '}
-                                                        {formatExpiryDate(sessionDoc.expiry_date)}
+                                                        {formatDate(sessionDoc.expiry_date)}
                                                     </p>
                                                 )}
                                                 {!sessionDoc?.expiry_date && !canEditExpiry && (
@@ -263,7 +247,7 @@ export default function StepDocuments({ documentTypes, sessionData }) {
                                         {typeRequiresExpiry && hasUploadedDoc && (
                                             <p className="text-xs text-(--color-text-tertiary) mt-1">
                                                 Expires on:{' '}
-                                                {formatExpiryDate(
+                                                {formatDate(
                                                     canEditExpiry
                                                         ? expiryByType[normalizedTypeId]
                                                         : sessionDoc?.expiry_date

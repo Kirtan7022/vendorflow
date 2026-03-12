@@ -14,10 +14,11 @@ export function FormInput({
     icon = null,
     className = '',
 }) {
+    const id = useId();
     return (
         <div className={className}>
             {label && (
-                <label className="text-sm font-semibold text-(--color-text-primary) mb-2 block">
+                <label htmlFor={id} className="text-sm font-semibold text-(--color-text-primary) mb-2 block">
                     {label} {required && <span className="text-(--color-danger)">*</span>}
                 </label>
             )}
@@ -36,6 +37,7 @@ export function FormInput({
                     </span>
                 )}
                 <input
+                    id={id}
                     type={type}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
@@ -72,14 +74,16 @@ export function FormTextarea({
     rows = 4,
     className = '',
 }) {
+    const id = useId();
     return (
         <div className={className}>
             {label && (
-                <label className="text-sm font-semibold text-(--color-text-primary) mb-2 block">
+                <label htmlFor={id} className="text-sm font-semibold text-(--color-text-primary) mb-2 block">
                     {label} {required && <span className="text-(--color-danger)">*</span>}
                 </label>
             )}
             <textarea
+                id={id}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -361,11 +365,12 @@ export function FormSelect({
     );
 }
 
-export function FormCheckbox({ label, checked, onChange, className = '' }) {
+export function FormCheckbox({ label, checked, onChange, error = null, className = '' }) {
     return (
-        <label
-            className={`flex items-center gap-3 text-sm text-(--color-text-secondary) cursor-pointer group ${className}`}
-        >
+        <div className={className}>
+            <label
+                className="flex items-center gap-3 text-sm text-(--color-text-secondary) cursor-pointer group"
+            >
             <div className="relative">
                 <input
                     type="checkbox"
@@ -389,7 +394,13 @@ export function FormCheckbox({ label, checked, onChange, className = '' }) {
                 </svg>
             </div>
             <span className="font-medium">{label}</span>
-        </label>
+            </label>
+            {error && (
+                <p className="text-sm text-(--color-danger) mt-1.5 flex items-center gap-1">
+                    <AppIcon name="warning" className="h-4 w-4" /> {error}
+                </p>
+            )}
+        </div>
     );
 }
 

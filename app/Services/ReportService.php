@@ -54,17 +54,25 @@ class ReportService
             PaymentRequest::STATUS_PENDING_FINANCE,
         ];
 
+        $statsQuery = PaymentRequest::query();
+        if ($request->filled('start_date')) {
+            $statsQuery->whereDate('created_at', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $statsQuery->whereDate('created_at', '<=', $request->end_date);
+        }
+
         return [
             'payments' => $query->orderBy('created_at', 'desc')->paginate(20),
             'stats' => [
-                'total_amount' => PaymentRequest::sum('amount'),
-                'pending_count' => PaymentRequest::whereIn('status', $pendingStatuses)->count(),
-                'pending_amount' => PaymentRequest::whereIn('status', $pendingStatuses)->sum('amount'),
-                'approved_count' => PaymentRequest::where('status', PaymentRequest::STATUS_APPROVED)->count(),
-                'approved_amount' => PaymentRequest::where('status', PaymentRequest::STATUS_APPROVED)->sum('amount'),
-                'paid_count' => PaymentRequest::where('status', PaymentRequest::STATUS_PAID)->count(),
-                'paid_amount' => PaymentRequest::where('status', PaymentRequest::STATUS_PAID)->sum('amount'),
-                'rejected_count' => PaymentRequest::where('status', PaymentRequest::STATUS_REJECTED)->count(),
+                'total_amount' => (clone $statsQuery)->sum('amount'),
+                'pending_count' => (clone $statsQuery)->whereIn('status', $pendingStatuses)->count(),
+                'pending_amount' => (clone $statsQuery)->whereIn('status', $pendingStatuses)->sum('amount'),
+                'approved_count' => (clone $statsQuery)->where('status', PaymentRequest::STATUS_APPROVED)->count(),
+                'approved_amount' => (clone $statsQuery)->where('status', PaymentRequest::STATUS_APPROVED)->sum('amount'),
+                'paid_count' => (clone $statsQuery)->where('status', PaymentRequest::STATUS_PAID)->count(),
+                'paid_amount' => (clone $statsQuery)->where('status', PaymentRequest::STATUS_PAID)->sum('amount'),
+                'rejected_count' => (clone $statsQuery)->where('status', PaymentRequest::STATUS_REJECTED)->count(),
             ],
             'filters' => [
                 'start_date' => $request->start_date,

@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { VendorLayout, PageHeader, Card, Button, AppIcon } from '@/Components';
+import { formatRelativeTime } from '@/utils/dateFormatters';
 
 export default function Notifications({ vendor, notifications = { data: [] } }) {
     const [filter, setFilter] = useState('all');
@@ -66,18 +67,6 @@ export default function Notifications({ vendor, notifications = { data: [] } }) 
                 preserveScroll: true,
             }
         );
-    };
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
-
-        if (diff < 60000) return 'Just now';
-        if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
-        if (diff < 604800000) return `${Math.floor(diff / 86400000)} days ago`;
-        return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
     };
 
     const header = (
@@ -187,7 +176,7 @@ export default function Notifications({ vendor, notifications = { data: [] } }) 
                                                         {notification.data?.title}
                                                     </h3>
                                                     <span className="text-xs text-(--color-text-muted) whitespace-nowrap">
-                                                        {formatDate(notification.created_at)}
+                                                        {formatRelativeTime(notification.created_at)}
                                                     </span>
                                                 </div>
                                                 <p

@@ -75,7 +75,10 @@ class VendorController extends Controller
             return redirect()->route('vendor.onboarding');
         }
 
-        $documents = $vendor->documents()->with('documentType')->get();
+        $documents = $vendor->documents()
+            ->where('is_current', true)
+            ->with('documentType')
+            ->get();
         $documentTypes = $this->getActiveDocumentTypes();
 
         return Inertia::render('Vendor/Documents', [
@@ -225,7 +228,6 @@ class VendorController extends Controller
                 'state',
                 'pincode',
             ];
-            $metaFields = ['_token', '_method'];
             $attempted = array_diff(array_keys($request->validated()), $allowedFields);
 
             if (! empty($attempted)) {

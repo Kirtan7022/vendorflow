@@ -10,6 +10,7 @@ import {
     ModalCancelButton,
     ModalPrimaryButton,
 } from '@/Components';
+import { formatDateTime } from '@/utils/dateFormatters';
 
 export default function PaymentsShow({ payment }) {
     const { auth } = usePage().props;
@@ -83,20 +84,6 @@ export default function PaymentsShow({ payment }) {
     const openRejectModal = (role) => {
         setActionRole(role);
         setShowRejectModal(true);
-    };
-
-    const formatDateTime = (value) => {
-        if (!value) {
-            return '-';
-        }
-
-        return new Date(value).toLocaleString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
     };
 
     const formatInrAmount = (value) => {

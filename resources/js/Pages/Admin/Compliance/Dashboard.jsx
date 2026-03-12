@@ -1,30 +1,36 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     AdminLayout,
     AppIcon,
     Badge,
     Button,
     Card,
+    Modal,
+    ModalCancelButton,
+    ModalPrimaryButton,
     PageHeader,
     StatCard,
     StatGrid,
 } from '@/Components';
+import { formatDateTime } from '@/utils/dateFormatters';
 
 export default function ComplianceDashboard({ stats, atRiskVendors, recentResults, rules }) {
     const { auth } = usePage().props;
     const can = auth?.can || {};
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     const runEvaluation = () => {
-        if (confirm('Run compliance evaluation for all vendors?')) {
-            router.post('/admin/compliance/evaluate-all');
-        }
+        router.post('/admin/compliance/evaluate-all', {}, {
+            onSuccess: () => setShowConfirmModal(false),
+        });
     };
 
     const header = (
         <PageHeader
             title="Compliance Dashboard"
             subtitle="Monitor vendor compliance status"
-            actions={can.run_compliance && <Button onClick={runEvaluation}>Run Evaluation</Button>}
+            actions={can.run_compliance && <Button onClick={() => setShowConfirmModal(true)}>Run Evaluation</Button>}
         />
     );
 
@@ -62,7 +68,7 @@ export default function ComplianceDashboard({ stats, atRiskVendors, recentResult
                 <div className="grid lg:grid-cols-2 gap-8">
                     {/* At Risk Vendors */}
                     <Card title="Vendors Needing Attention">
-                        <div className="p-4 space-y-3">
+                        <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
                             {atRiskVendors && atRiskVendors.length > 0 ? (
                                 atRiskVendors.map((vendor) => (
                                     <Link
@@ -96,7 +102,7 @@ export default function ComplianceDashboard({ stats, atRiskVendors, recentResult
 
                     {/* Recent Failures */}
                     <Card title="Recent Compliance Failures">
-                        <div className="p-4 space-y-3">
+                        <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
                             {recentResults && recentResults.length > 0 ? (
                                 recentResults.map((result) => (
                                     <div
@@ -108,7 +114,7 @@ export default function ComplianceDashboard({ stats, atRiskVendors, recentResult
                                                 {result.vendor?.company_name}
                                             </div>
                                             <div className="text-xs text-(--color-text-muted)">
-                                                {result.evaluated_at}
+                                                {formatDateTime(result.evaluated_at)}
                                             </div>
                                         </div>
                                         <div className="text-sm text-(--color-danger) mt-1">
@@ -203,6 +209,26 @@ export default function ComplianceDashboard({ stats, atRiskVendors, recentResult
                     </div>
                 </Card>
             </div>
+
+            {/* Confirm Evaluation Modal */}
+            <Modal
+                isOpen={showConfirmModal}
+                onClose={() => setShowConfirmModal(false)}
+                title="Run Compliance Evaluation"
+                footer={
+                    <>
+                        <ModalCancelButton onClick={() => setShowConfirmModal(false)} />
+                        <ModalPrimaryButton onClick={runEvaluation}>
+                            Run Evaluation
+                        </ModalPrimaryButton>
+                    </>
+                }
+            >
+                <p className="text-(--color-text-secondary)">
+                    This will run compliance evaluation for all vendors. Are you sure you want to
+                    proceed?
+                </p>
+            </Modal>
         </AdminLayout>
     );
 }

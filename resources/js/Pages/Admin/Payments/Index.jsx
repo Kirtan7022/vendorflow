@@ -9,6 +9,7 @@ import {
     Modal,
     ModalCancelButton,
     ModalPrimaryButton,
+    FormTextarea,
     StatCard,
     StatGrid,
 } from '@/Components';
@@ -22,6 +23,11 @@ export default function PaymentsIndex({ payments, stats, currentStatus }) {
     const [paymentRef, setPaymentRef] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('');
 
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [rejectPaymentId, setRejectPaymentId] = useState(null);
+    const [rejectStage, setRejectStage] = useState(null);
+    const [rejectComment, setRejectComment] = useState('');
+
     const handleAction = (paymentId, stage, action) => {
         const route =
             stage === 'ops'
@@ -29,16 +35,31 @@ export default function PaymentsIndex({ payments, stats, currentStatus }) {
                 : `/admin/payments/${paymentId}/approve-finance`;
 
         if (action === 'reject') {
-            const comment = window.prompt('Enter rejection reason:');
-            if (!comment) {
-                return;
-            }
-
-            router.post(route, { action, comment });
+            setRejectPaymentId(paymentId);
+            setRejectStage(stage);
+            setRejectComment('');
+            setShowRejectModal(true);
             return;
         }
 
         router.post(route, { action });
+    };
+
+    const handleReject = () => {
+        if (!rejectComment.trim()) return;
+        const route =
+            rejectStage === 'ops'
+                ? `/admin/payments/${rejectPaymentId}/validate-ops`
+                : `/admin/payments/${rejectPaymentId}/approve-finance`;
+
+        router.post(route, { action: 'reject', comment: rejectComment }, {
+            onSuccess: () => {
+                setShowRejectModal(false);
+                setRejectPaymentId(null);
+                setRejectStage(null);
+                setRejectComment('');
+            },
+        });
     };
 
     const handleMarkPaid = () => {
@@ -286,6 +307,32 @@ export default function PaymentsIndex({ payments, stats, currentStatus }) {
                         </select>
                     </div>
                 </div>
+            </Modal>
+
+            <Modal
+                isOpen={showRejectModal}
+                onClose={() => setShowRejectModal(false)}
+                title="Reject Payment"
+                footer={
+                    <>
+                        <ModalCancelButton onClick={() => setShowRejectModal(false)} />
+                        <ModalPrimaryButton
+                            variant="danger"
+                            onClick={handleReject}
+                            disabled={!rejectComment.trim()}
+                        >
+                            Reject
+                        </ModalPrimaryButton>
+                    </>
+                }
+            >
+                <FormTextarea
+                    label="Rejection Reason *"
+                    value={rejectComment}
+                    onChange={setRejectComment}
+                    placeholder="Please provide a reason for rejection..."
+                    required
+                />
             </Modal>
         </AdminLayout>
     );

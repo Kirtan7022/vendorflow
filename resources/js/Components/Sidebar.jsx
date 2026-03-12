@@ -45,6 +45,13 @@ const adminNavConfig = [
         permission: 'view_messages',
         allowedRoles: ['ops_manager', 'super_admin'],
     },
+    {
+        name: 'Send Notification',
+        icon: 'notifications',
+        href: '/admin/notifications/send',
+        permission: 'send_notifications',
+        allowedRoles: ['ops_manager', 'super_admin'],
+    },
     { name: 'Reports', icon: 'reports', href: '/admin/reports', permission: 'view_reports' },
     {
         name: 'System Health',

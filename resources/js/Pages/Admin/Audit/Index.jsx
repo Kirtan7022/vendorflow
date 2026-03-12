@@ -1,11 +1,14 @@
 import { AdminLayout, PageHeader, DataTable, Badge, Card } from '@/Components';
+import { formatDateTime } from '@/utils/dateFormatters';
 
 export default function AuditIndex({ logs = {} }) {
     const columns = [
         {
             header: 'Time',
             render: (row) => (
-                <span className="text-(--color-text-secondary) text-sm">{row.created_at}</span>
+                <span className="text-(--color-text-secondary) text-sm">
+                    {formatDateTime(row.created_at)}
+                </span>
             ),
         },
         {

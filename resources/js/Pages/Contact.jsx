@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppIcon from '@/Components/AppIcon';
 import GuestLayout from '@/Components/GuestLayout';
 
@@ -31,8 +32,20 @@ export default function Contact() {
         message: '',
     });
 
+    const [emailError, setEmailError] = useState('');
+
+    // Validate email requires a proper domain with TLD (e.g., user@example.com)
+    const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+
     const handleSubmit = (event) => {
         event.preventDefault();
+        setEmailError('');
+
+        if (!isValidEmail(form.data.email)) {
+            setEmailError('Please enter a valid email address (e.g., user@example.com).');
+            return;
+        }
+
         form.post('/contact', {
             onSuccess: () => form.reset(),
         });
@@ -106,7 +119,7 @@ export default function Contact() {
                                             placeholder="Your name"
                                             required
                                         />
-                                        {form.errors.name && <p className="text-sm text-red-500">{form.errors.name}</p>}
+                                        {form.errors.name && <p className="text-sm text-(--color-danger)">{form.errors.name}</p>}
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium text-(--color-text-secondary)">
@@ -115,14 +128,21 @@ export default function Contact() {
                                         <input
                                             type="email"
                                             value={form.data.email}
-                                            onChange={(event) =>
-                                                form.setData('email', event.target.value)
-                                            }
+                                            onChange={(event) => {
+                                                form.setData('email', event.target.value);
+                                                if (emailError) setEmailError('');
+                                            }}
                                             className="input-field"
                                             placeholder="you@company.com"
+                                            pattern="[^\s@]+@[^\s@]+\.[^\s@]{2,}"
+                                            title="Please enter a valid email (e.g., user@example.com)"
                                             required
                                         />
-                                        {form.errors.email && <p className="text-sm text-red-500">{form.errors.email}</p>}
+                                        {(emailError || form.errors.email) && (
+                                            <p className="text-sm text-(--color-danger)">
+                                                {emailError || form.errors.email}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -140,7 +160,7 @@ export default function Contact() {
                                         placeholder="What do you need help with?"
                                         required
                                     />
-                                    {form.errors.subject && <p className="text-sm text-red-500">{form.errors.subject}</p>}
+                                    {form.errors.subject && <p className="text-sm text-(--color-danger)">{form.errors.subject}</p>}
                                 </div>
 
                                 <div className="space-y-1">
@@ -157,7 +177,7 @@ export default function Contact() {
                                         placeholder="Share your requirements"
                                         required
                                     />
-                                    {form.errors.message && <p className="text-sm text-red-500">{form.errors.message}</p>}
+                                    {form.errors.message && <p className="text-sm text-(--color-danger)">{form.errors.message}</p>}
                                 </div>
 
                                 <button

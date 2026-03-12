@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AppIcon from './AppIcon';
+import { formatDate } from '@/utils/dateFormatters';
 
 export function DocumentViewer({ document, isOpen, onClose }) {
     const viewUrl = document?.preview_url || (document ? `/documents/${document.id}/view` : '');
@@ -194,7 +195,7 @@ export function DocumentViewer({ document, isOpen, onClose }) {
                             )}
                             {document.created_at && (
                                 <span>
-                                    Uploaded: {new Date(document.created_at).toLocaleDateString()}
+                                    Uploaded: {formatDate(document.created_at)}
                                 </span>
                             )}
                         </div>

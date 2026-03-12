@@ -14,7 +14,7 @@ export default function VendorLayout({
     header = null,
     badges = {},
 }) {
-    const { flash } = usePage().props;
+    const { flash = {} } = usePage().props;
 
     // Show onboarding in nav if vendor not complete
     const customNav =

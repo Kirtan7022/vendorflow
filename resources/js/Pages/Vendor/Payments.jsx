@@ -6,9 +6,13 @@ import {
     Card,
     FormInput,
     FormTextarea,
+    Modal,
+    ModalCancelButton,
+    ModalPrimaryButton,
     PageHeader,
     VendorLayout,
 } from '@/Components';
+import { formatDate } from '@/utils/dateFormatters';
 
 export default function Payments({ vendor, payments = { data: [] } }) {
     const [showRequestModal, setShowRequestModal] = useState(false);
@@ -187,7 +191,7 @@ export default function Payments({ vendor, payments = { data: [] } }) {
                                                 </span>
                                             </td>
                                             <td className="p-4 text-(--color-text-tertiary) text-sm">
-                                                {new Date(payment.created_at).toLocaleDateString()}
+                                                {formatDate(payment.created_at)}
                                             </td>
                                         </tr>
                                     ))}
@@ -198,87 +202,57 @@ export default function Payments({ vendor, payments = { data: [] } }) {
                 </Card>
             </div>
 
-            {showRequestModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div
-                        className="fixed inset-0 bg-(--color-bg-secondary)/40 backdrop-blur-sm transition-opacity"
-                        onClick={() => setShowRequestModal(false)}
-                        aria-hidden="true"
+            <Modal
+                isOpen={showRequestModal}
+                onClose={() => setShowRequestModal(false)}
+                title="Request Payment"
+                size="lg"
+                footer={
+                    <>
+                        <ModalCancelButton onClick={() => setShowRequestModal(false)} />
+                        <ModalPrimaryButton onClick={handleSubmitRequest} disabled={requestForm.processing}>
+                            {requestForm.processing ? 'Submitting...' : 'Submit Request'}
+                        </ModalPrimaryButton>
+                    </>
+                }
+            >
+                <div className="space-y-5">
+                    {requestForm.errors.submit && (
+                        <div className="bg-(--color-danger-light) border border-(--color-danger) text-(--color-danger-dark) px-4 py-3 rounded-xl text-sm font-medium">
+                            {requestForm.errors.submit}
+                        </div>
+                    )}
+
+                    <FormInput
+                        label="Amount (INR)"
+                        type="number"
+                        value={requestForm.data.amount}
+                        onChange={(val) => requestForm.setData('amount', val)}
+                        error={requestForm.errors.amount}
+                        placeholder="0.00"
+                        required
+                        autoFocus
                     />
 
-                    <div className="relative bg-(--color-bg-primary) w-full max-w-lg rounded-2xl p-0 overflow-hidden shadow-token-xl animate-scale-in border border-(--color-border-primary)">
-                        <div className="p-6 border-b border-(--color-border-secondary) bg-(--color-bg-secondary)/50">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-xl font-bold text-(--color-text-primary)">
-                                        Request Payment
-                                    </h3>
-                                    <p className="text-sm text-(--color-text-tertiary) mt-1">
-                                        Submit a new invoice for processing
-                                    </p>
-                                </div>
-                                <div className="p-2 bg-(--color-brand-primary-light) rounded-full text-(--color-brand-primary)">
-                                    <AppIcon name="payments" className="w-6 h-6" />
-                                </div>
-                            </div>
-                        </div>
+                    <FormInput
+                        label="Invoice Number"
+                        value={requestForm.data.invoice_number}
+                        onChange={(val) => requestForm.setData('invoice_number', val)}
+                        error={requestForm.errors.invoice_number}
+                        placeholder="INV-2026-001"
+                    />
 
-                        <form onSubmit={handleSubmitRequest} className="p-6 space-y-5">
-                            {requestForm.errors.submit && (
-                                <div className="bg-(--color-danger-light) border border-(--color-danger) text-(--color-danger-dark) px-4 py-3 rounded-xl text-sm font-medium">
-                                    {requestForm.errors.submit}
-                                </div>
-                            )}
-
-                            <FormInput
-                                label="Amount (INR)"
-                                type="number"
-                                value={requestForm.data.amount}
-                                onChange={(val) => requestForm.setData('amount', val)}
-                                error={requestForm.errors.amount}
-                                placeholder="0.00"
-                                required
-                                autoFocus
-                            />
-
-                            <FormInput
-                                label="Invoice Number"
-                                value={requestForm.data.invoice_number}
-                                onChange={(val) => requestForm.setData('invoice_number', val)}
-                                error={requestForm.errors.invoice_number}
-                                placeholder="INV-2026-001"
-                            />
-
-                            <FormTextarea
-                                label="Description"
-                                value={requestForm.data.description}
-                                onChange={(val) => requestForm.setData('description', val)}
-                                error={requestForm.errors.description}
-                                placeholder="Brief description of services or products..."
-                                required
-                                rows={3}
-                            />
-
-                            <div className="flex gap-3 pt-2">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowRequestModal(false)}
-                                    className="flex-1 justify-center py-2.5"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={requestForm.processing}
-                                    className="flex-1 justify-center py-2.5 text-base shadow-token-primary"
-                                >
-                                    {requestForm.processing ? 'Submitting...' : 'Submit Request'}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
+                    <FormTextarea
+                        label="Description"
+                        value={requestForm.data.description}
+                        onChange={(val) => requestForm.setData('description', val)}
+                        error={requestForm.errors.description}
+                        placeholder="Brief description of services or products..."
+                        required
+                        rows={3}
+                    />
                 </div>
-            )}
+            </Modal>
         </VendorLayout>
     );
 }

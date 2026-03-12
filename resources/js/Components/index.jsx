@@ -174,9 +174,13 @@ export function CopyButton({ text, className = '' }) {
     const [copied, setCopied] = React.useState(false);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        navigator.clipboard
+            .writeText(text)
+            .then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            })
+            .catch(() => {});
     };
 
     return (

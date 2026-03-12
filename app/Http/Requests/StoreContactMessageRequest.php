@@ -23,7 +23,7 @@ class StoreContactMessageRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:100',
-            'email' => 'required|email|max:255',
+            'email' => 'required|email:rfc,dns|max:255',
             'subject' => 'required|string|max:200',
             'message' => 'required|string|max:5000',
         ];

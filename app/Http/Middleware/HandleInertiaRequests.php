@@ -121,6 +121,7 @@ class HandleInertiaRequests extends Middleware
                     'run_compliance' => $isOpsManager || $isSuperAdmin,
                     'edit_rules' => $isSuperAdmin,
                     'view_messages' => $isOpsManager || $isSuperAdmin,
+                    'send_notifications' => $isOpsManager || $isSuperAdmin,
 
                     // Admin access
                     'view_audit' => $isSuperAdmin,

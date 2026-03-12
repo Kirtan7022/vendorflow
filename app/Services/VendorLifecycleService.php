@@ -43,24 +43,54 @@ class VendorLifecycleService
     }
 
     /**
+     * Approve a vendor without activating (transitions to approved state only).
+     * Activation is a separate step that requires compliance/doc readiness.
+     */
+    public function approve(Vendor $vendor, User $actor, ?string $comment = null): void
+    {
+        DB::transaction(function () use ($vendor, $actor, $comment) {
+            $note = $comment ?: 'Vendor approved';
+
+            if ($vendor->status === Vendor::STATUS_SUBMITTED) {
+                $vendor->transitionTo(Vendor::STATUS_UNDER_REVIEW, $actor, $note);
+                $vendor->refresh();
+            }
+
+            if ($vendor->status === Vendor::STATUS_UNDER_REVIEW) {
+                $vendor->transitionTo(Vendor::STATUS_APPROVED, $actor, $note);
+
+                return;
+            }
+
+            throw new InvalidArgumentException("Vendor cannot be approved from {$vendor->status} state.");
+        });
+    }
+
+    /**
      * Reject a vendor with mandatory reason.
      */
     public function reject(Vendor $vendor, User $actor, string $reason): void
     {
-        if ($vendor->status === Vendor::STATUS_SUBMITTED) {
-            $vendor->transitionTo(Vendor::STATUS_UNDER_REVIEW, $actor, 'Vendor moved to review before rejection');
-            $vendor->refresh();
-        }
+        DB::transaction(function () use ($vendor, $actor, $reason) {
+            if ($vendor->status === Vendor::STATUS_SUBMITTED) {
+                $vendor->transitionTo(Vendor::STATUS_UNDER_REVIEW, $actor, 'Vendor moved to review before rejection');
+                $vendor->refresh();
+            }
 
-        if ($vendor->status !== Vendor::STATUS_UNDER_REVIEW) {
-            throw new InvalidArgumentException("Vendor cannot be rejected from {$vendor->status} state.");
-        }
+            if ($vendor->status !== Vendor::STATUS_UNDER_REVIEW) {
+                throw new InvalidArgumentException("Vendor cannot be rejected from {$vendor->status} state.");
+            }
 
-        $vendor->transitionTo(Vendor::STATUS_REJECTED, $actor, $reason);
+            $vendor->transitionTo(Vendor::STATUS_REJECTED, $actor, $reason);
+        });
     }
 
     /**
      * Activate a vendor from approved or suspended state.
+     *
+     * For approved vendors (initial activation), only mandatory document
+     * verification is required — compliance evaluation hasn't run yet.
+     * For suspended vendors (reactivation), full compliance checks apply.
      */
     public function activate(Vendor $vendor, User $actor, ?string $comment = null): void
     {
@@ -68,7 +98,12 @@ class VendorLifecycleService
             throw new InvalidArgumentException("Vendor cannot be activated from {$vendor->status} state.");
         }
 
-        $this->assertReadyForActivation($vendor);
+        if ($vendor->status === Vendor::STATUS_SUSPENDED) {
+            $this->assertReadyForActivation($vendor);
+        } else {
+            $this->assertDocumentsReady($vendor);
+        }
+
         $vendor->transitionTo(Vendor::STATUS_ACTIVE, $actor, $comment ?: 'Vendor activated');
     }
 
@@ -101,9 +136,9 @@ class VendorLifecycleService
     }
 
     /**
-     * Enforce non-negotiable readiness checks before activation.
+     * Verify that all mandatory documents are uploaded, verified, and not expired.
      */
-    private function assertReadyForActivation(Vendor $vendor): void
+    private function assertDocumentsReady(Vendor $vendor): void
     {
         $mandatoryTypeIds = DocumentType::where('is_mandatory', true)->pluck('id');
 
@@ -123,6 +158,15 @@ class VendorLifecycleService
                 throw new InvalidArgumentException('Vendor cannot be activated until all mandatory documents are verified and valid.');
             }
         }
+    }
+
+    /**
+     * Enforce full readiness checks before reactivation (from suspended state).
+     * Includes document, compliance, and flag checks.
+     */
+    private function assertReadyForActivation(Vendor $vendor): void
+    {
+        $this->assertDocumentsReady($vendor);
 
         if ($vendor->compliance_status !== Vendor::COMPLIANCE_COMPLIANT || (int) $vendor->compliance_score < self::MIN_ACTIVATION_COMPLIANCE_SCORE) {
             throw new InvalidArgumentException('Vendor cannot be activated until compliance score meets the activation threshold.');

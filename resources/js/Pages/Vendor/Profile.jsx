@@ -10,6 +10,7 @@ import {
     FormInput,
     FormSelect,
 } from '@/Components';
+import { formatDate } from '@/utils/dateFormatters';
 
 export default function Profile({ vendor }) {
     const { auth } = usePage().props;
@@ -297,14 +298,7 @@ export default function Profile({ vendor }) {
                                         </div>
                                         <div className="text-lg font-semibold text-(--color-text-primary) mt-1">
                                             {vendor?.created_at
-                                                ? new Date(vendor.created_at).toLocaleDateString(
-                                                      'en-IN',
-                                                      {
-                                                          year: 'numeric',
-                                                          month: 'long',
-                                                          day: 'numeric',
-                                                      }
-                                                  )
+                                                ? formatDate(vendor.created_at)
                                                 : 'N/A'}
                                         </div>
                                     </div>

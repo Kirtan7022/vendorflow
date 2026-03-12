@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { AppIcon } from '@/Components';
+import { formatDate } from '@/utils/dateFormatters';
 
 export default function StepReview({ vendor, sessionData, documentTypes }) {
     const step1Session = sessionData?.step1 || {};
@@ -17,22 +18,6 @@ export default function StepReview({ vendor, sessionData, documentTypes }) {
     }, [documentTypes]);
 
     const [processing, setProcessing] = useState(false);
-    const formatExpiryDate = (value) => {
-        if (!value) {
-            return '-';
-        }
-
-        const date = new Date(`${value}T00:00:00`);
-        if (Number.isNaN(date.getTime())) {
-            return value;
-        }
-
-        return date.toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        });
-    };
 
     const submitApplication = () => {
         router.post(
@@ -201,7 +186,7 @@ export default function StepReview({ vendor, sessionData, documentTypes }) {
                                                 </p>
                                                 {requiresExpiry && (
                                                     <p className="text-xs text-(--color-text-tertiary)">
-                                                        Expiry: {formatExpiryDate(doc.expiry_date)}
+                                                        Expiry: {formatDate(doc.expiry_date)}
                                                     </p>
                                                 )}
                                             </div>

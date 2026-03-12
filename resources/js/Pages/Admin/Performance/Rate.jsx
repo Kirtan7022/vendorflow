@@ -35,6 +35,15 @@ export default function RateVendor({ vendor, metrics = [] }) {
     return (
         <AdminLayout title={`Rate ${vendor?.company_name}`} activeNav="Performance" header={header}>
             <form onSubmit={handleSubmit} className="max-w-4xl space-y-8">
+                {/* Validation Errors */}
+                {(form.errors.period_start || form.errors.period_end || form.errors.ratings) && (
+                    <div className="p-4 rounded-xl bg-(--color-danger-light) border border-(--color-danger) text-(--color-danger-dark) text-sm space-y-1">
+                        {form.errors.period_start && <p>{form.errors.period_start}</p>}
+                        {form.errors.period_end && <p>{form.errors.period_end}</p>}
+                        {form.errors.ratings && <p>{form.errors.ratings}</p>}
+                    </div>
+                )}
+
                 {/* Period Selection */}
                 <Card title="Rating Period">
                     <div className="p-6">

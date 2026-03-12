@@ -1,5 +1,6 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import { AdminLayout, DataTable, Badge, PageHeader, Button } from '@/Components';
+import { formatDateTime } from '@/utils/dateFormatters';
 import { useState } from 'react';
 
 export default function Index() {
@@ -47,11 +48,7 @@ export default function Index() {
             header: 'Received',
             render: (row) => (
                 <span className="text-(--color-text-secondary)">
-                    {new Date(row.created_at).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                    })}
+                    {formatDateTime(row.created_at)}
                 </span>
             ),
         },

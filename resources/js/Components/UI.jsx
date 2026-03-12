@@ -44,8 +44,8 @@ export function Alert({ type = 'info', title, children, onClose }) {
                     <div className="text-sm opacity-90">{children}</div>
                 </div>
                 {onClose && (
-                    <button onClick={onClose} className="opacity-60 hover:opacity-100">
-                        x
+                    <button onClick={onClose} className="opacity-60 hover:opacity-100" aria-label="Dismiss">
+                        &#215;
                     </button>
                 )}
             </div>
@@ -68,8 +68,8 @@ export function Toast({ message, type = 'success', onClose }) {
         >
             <span>{message}</span>
             {onClose && (
-                <button onClick={onClose} className="opacity-70 hover:opacity-100">
-                    x
+                <button onClick={onClose} className="opacity-70 hover:opacity-100" aria-label="Dismiss">
+                    &#215;
                 </button>
             )}
         </div>

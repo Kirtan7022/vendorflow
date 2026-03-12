@@ -55,10 +55,14 @@ trait Auditable
 
         // Log soft deletes
         static::deleted(function ($model) {
+            $attributes = collect($model->getOriginal())
+                ->except(static::$auditExcludeFields)
+                ->toArray();
+
             AuditLog::log(
                 AuditLog::EVENT_DELETED,
                 $model,
-                $model->getOriginal(),
+                $attributes,
                 null
             );
         });

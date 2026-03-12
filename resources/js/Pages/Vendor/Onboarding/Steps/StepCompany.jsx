@@ -103,6 +103,9 @@ export default function StepCompany({ vendor, sessionData }) {
                             onChange={(e) => setData('pan_number', e.target.value.toUpperCase())}
                             className="w-full px-4 py-3 bg-(--color-bg-primary) border border-(--color-border-primary) rounded-lg text-sm focus:border-(--color-border-focus) focus:ring-2 focus:ring-(--color-brand-primary)/20 outline-none transition-all"
                             placeholder="ABCDE1234F"
+                            maxLength={10}
+                            pattern="[A-Z]{5}[0-9]{4}[A-Z]"
+                            title="5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)"
                         />
                         {errors.pan_number && (
                             <p className="text-sm text-(--color-danger)">{errors.pan_number}</p>
@@ -130,7 +133,10 @@ export default function StepCompany({ vendor, sessionData }) {
                             value={data.contact_phone}
                             onChange={(e) => setData('contact_phone', e.target.value)}
                             className="w-full px-4 py-3 bg-(--color-bg-primary) border border-(--color-border-primary) rounded-lg text-sm focus:border-(--color-border-focus) focus:ring-2 focus:ring-(--color-brand-primary)/20 outline-none transition-all"
-                            placeholder="+91 98765 43210"
+                            placeholder="9876543210"
+                            maxLength={15}
+                            pattern="\+?[0-9]{10,15}"
+                            title="10-15 digits, optionally prefixed with +"
                         />
                         {errors.contact_phone && (
                             <p className="text-sm text-(--color-danger)">{errors.contact_phone}</p>
@@ -180,8 +186,12 @@ export default function StepCompany({ vendor, sessionData }) {
                         <input
                             type="text"
                             value={data.pincode}
-                            onChange={(e) => setData('pincode', e.target.value)}
+                            onChange={(e) => setData('pincode', e.target.value.replace(/\D/g, ''))}
                             className="w-full px-4 py-3 bg-(--color-bg-primary) border border-(--color-border-primary) rounded-lg text-sm focus:border-(--color-border-focus) focus:ring-2 focus:ring-(--color-brand-primary)/20 outline-none transition-all"
+                            maxLength={6}
+                            pattern="[0-9]{6}"
+                            title="Exactly 6 digits"
+                            placeholder="400001"
                         />
                     </div>
                 </div>
